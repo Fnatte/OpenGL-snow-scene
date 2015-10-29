@@ -8,6 +8,7 @@
 
 #include "main.h"
 #include "instancing.h"
+#include "keyboard.h"
 
 #define near 1.0
 #define far 1000.0
@@ -24,10 +25,8 @@ GLuint program;
 GLuint skyboxProgram;
 GLuint instancingProgram;
 
-Model *bunny;
 Model *octagon;
 Model *skybox;
-mat4 transBunny;
 mat4 transCubes;
 mat4 transCubes1;
 mat4 transCubes2;
@@ -52,11 +51,9 @@ void init(void) {
 
 	dumpInfo();
 
-	bunny = LoadModelPlus("./models/bunnyplus.obj");
 	octagon = LoadModelPlus("./models/octagon.obj");
 	skybox = LoadModelPlus("./models/skybox.obj");
 
-	transBunny = T(34.4, 6.4, -30.4);
 	transCubes = T(-2.2, -2.3, 10.2);
 	transCubes1 = T(88, -2.3, 10.2);
 	transCubes2 = T(-88, -2.3, 10.2);
@@ -102,8 +99,8 @@ void OnTimer(int value) {
 
 void display(void) {
 	printError("pre display");
-	cameraPos = moveOnKeyInputRelativeCamera(cameraPos);
-	cameraTarget = moveOnKeyInputRelativeCamera(cameraTarget);
+	cameraPos = moveCameraOnKeyboard(cameraPos, cameraNormal, cameraDirection);
+	cameraTarget = moveCameraOnKeyboard(cameraTarget, cameraNormal, cameraDirection);
 	lookMatrix = lookAtv(cameraPos, cameraTarget, cameraNormal);
 
 	GLfloat t = (GLfloat)glutGet(GLUT_ELAPSED_TIME) / 1000;
@@ -123,7 +120,6 @@ void display(void) {
 	glUniformMatrix4fv(glGetUniformLocation(instancingProgram, "viewMatrix"), 1, GL_TRUE, lookMatrix.m);
 
 	drawModelInstanced(octagon, instancingProgram, nrInstances, t, transCubes);
-	drawModelInstanced(bunny, instancingProgram, 5, t, transBunny);
 	if (VERBOSE) {
 		printf("%f\n", t - lastT);
 	}
@@ -137,21 +133,8 @@ void drawObject(mat4 transform, Model* model, GLuint p) {
 	printError("drawObject()");
 }
 
-int main(int argc, char *argv[])
-{
-	glutInit(&argc, argv);
-	glutInitContextVersion(3, 2);
-	glutCreateWindow ("Lab 3");
-	glutDisplayFunc(display);
-	initKeymapManager();
-	glutPassiveMotionFunc(handleMouse);
-	init ();
-	glutTimerFunc(16.7, &OnTimer, 0);
-	glutMainLoop();
-}
 
-void handleMouse(int x, int y)
-{
+void handleMouse(int x, int y) {
 	int width = glutGet(GLUT_WINDOW_WIDTH);
 	int height = glutGet(GLUT_WINDOW_HEIGHT);
 	cameraTarget = (vec3)
@@ -165,50 +148,15 @@ void handleMouse(int x, int y)
 	printError("handleMouse()");
 }
 
-vec3 moveOnKeyInputRelativeCamera(vec3 in) {
-	vec3 forward;
-	vec3 leftV;
-	if(keyIsDown('x')){
-		forward = ScalarMult(cameraDirection, 10.0f);
-		leftV = ScalarMult(CrossProduct(cameraDirection, cameraNormal), 10.0f);
-	}
-	else{
-		forward = ScalarMult(cameraDirection, 1.0f);
-		leftV = ScalarMult(CrossProduct(cameraDirection, cameraNormal), 1.0f);
-	}
 
-	if(keyIsDown('w')) {
-		in.x += forward.x;
-		in.y += forward.y;
-		in.z += forward.z;
-	}
-	else if (keyIsDown('s')) {
-		in.x -= forward.x;
-		in.y -= forward.y;
-		in.z -= forward.z;
-	}
-
-	if(keyIsDown('a')){
-		in.x -= leftV.x;
-		in.y -= leftV.y;
-		in.z -= leftV.z;
-	}
-	else if(keyIsDown('d')){
-		in.x += leftV.x;
-		in.y += leftV.y;
-		in.z += leftV.z;
-	}
-
-	if(keyIsDown('p')){
-		printf("(e%f, ", cameraPos.x);
-		printf("%f, ", cameraPos.y);
-		printf("%f)\n", cameraPos.z);
-	}
-	if(keyIsDown('q'))
-		in.y += 0.1;
-	else if(keyIsDown('e'))
-		in.y -= 0.1;
-
-	printError("moveonkeyinputrelativecamera()");
-	return in;
+int main(int argc, char *argv[]) {
+	glutInit(&argc, argv);
+	glutInitContextVersion(3, 2);
+	glutCreateWindow ("Lab 3");
+	glutDisplayFunc(display);
+	initKeymapManager();
+	glutPassiveMotionFunc(handleMouse);
+	init ();
+	glutTimerFunc(16.7, &OnTimer, 0);
+	glutMainLoop();
 }
