@@ -1,2 +1,2 @@
-void initializeGround(GLModel *model, GLuint program, GLuint texture);
-void drawGround(GLFloat* lookMatrix);
+void initializeGround(Model *model, GLuint program, GLuint texture);
+void drawGround(mat4 lookMatrix, mat4 m);

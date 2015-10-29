@@ -1,1 +1,1 @@
-void drawModelWithLocations(Model *m, GLuint program, GLuint positionLocation, GLuint normalLocation, GLuint textureLocation);
+void drawModelWithLocations(Model *m, GLuint positionLocation, GLuint normalLocation, GLuint textureLocation);

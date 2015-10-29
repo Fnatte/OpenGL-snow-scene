@@ -30,7 +30,6 @@ void setupInstancedVertexAttributes(GLuint prog, int count) {
 	randoms = malloc(count * count * count * sizeof(float));
 	for (int i = 0; i < count * count * count; i++) {
 		randoms[i] = (float)rand() / (float)(RAND_MAX / 20.0) + 0.1;
-		printf("%f\n", randoms[i]);
 	}
 }
 

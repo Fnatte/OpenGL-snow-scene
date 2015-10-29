@@ -1,8 +1,4 @@
-#include <time.h>
-#include <stdlib.h>
-#include <math.h>
 #include <GL/gl.h>
-#include <GL/glext.h>
 
 #include "./libraries/GLUtilities.h"
 #include "./libraries/LoadObject.h"
@@ -14,10 +10,10 @@
 GLuint positionLocation = 0;
 GLuint normalLocation   = 1;
 GLuint textureLocation  = 2;
-GLuint matrixLocation   = 3;
 
 GLuint program;
 GLuint texture;
+Model *model;
 
 void initializeGround(Model *_model, GLuint _program, GLuint _texture) {
 	model = _model;
@@ -25,10 +21,9 @@ void initializeGround(Model *_model, GLuint _program, GLuint _texture) {
 	texture = _texture;
 }
 
-void drawGround(GLFloat *lookMatrix) {
+void drawGround(mat4 lookMatrix, mat4 m) {
 	glUseProgram(program);
 	glBindTexture(GL_TEXTURE_2D, texture);
-
-	glUniformMatrix4fv(glGetUniformLocation(program, "lookMatrix"), 1, GL_TRUE, lookMatrix);
+	glUniformMatrix4fv(glGetUniformLocation(program, "viewMatrix"), 1, GL_TRUE, lookMatrix.m);
 	drawModelWithLocations(model, positionLocation, normalLocation, textureLocation);
 }

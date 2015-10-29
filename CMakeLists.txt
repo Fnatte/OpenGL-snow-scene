@@ -12,11 +12,15 @@ add_subdirectory (libraries)
 add_executable ( Projekt
 	main.c
 	instancing.c
+	ground.c
 	keyboard.c
+	utilities.c
 	shaders/instancing.vert
 	shaders/instancing.frag
 	shaders/skybox.vert
 	shaders/skybox.frag
+	shaders/ground.vert
+	shaders/ground.frag
 )
 target_link_libraries ( Projekt
 	${OPENGL_LIBRARIES}

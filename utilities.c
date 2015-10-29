@@ -1,14 +1,15 @@
 #include <GL/gl.h>
+#include "./libraries/LoadObject.h"
 
 
-void drawModelWithLocations(Model *m, GLuint program, GLuint positionLocation, GLuint normalLocation, GLuint textureLocation);
+void drawModelWithLocations(Model *m, GLuint positionLocation, GLuint normalLocation, GLuint textureLocation)
 {
 	glBindVertexArray(m->vao);
 
 	// Position	
 	glBindBuffer(GL_ARRAY_BUFFER, m->vb);
-	glVertexAttribPointer(position_loc, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glEnableVertexAttribArray(position_loc);
+	glVertexAttribPointer(positionLocation, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(positionLocation);
 	
 	// Normal
 	glBindBuffer(GL_ARRAY_BUFFER, m->nb);
