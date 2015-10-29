@@ -16,6 +16,8 @@
 #define top 0.5
 #define bottom -0.5
 
+#define VERBOSE 0
+
 // vertex array object
 unsigned int vertexArrayObjID;
 GLuint program;
@@ -40,7 +42,7 @@ vec3 cameraTarget;
 vec3 cameraNormal;
 vec3 cameraDirection;
 
-int nrInstances = 20000;
+int nrInstances = 20;
 
 void init(void) {
 	cameraPos = (vec3){1.5f, -20.0f, -10.0f};
@@ -121,8 +123,10 @@ void display(void) {
 	glUniformMatrix4fv(glGetUniformLocation(instancingProgram, "viewMatrix"), 1, GL_TRUE, lookMatrix.m);
 
 	drawModelInstanced(octagon, instancingProgram, nrInstances, t, transCubes);
-	drawModelInstanced(bunny, instancingProgram, 10, t, transBunny);
-	printf("%f\n", t - lastT);
+	drawModelInstanced(bunny, instancingProgram, 5, t, transBunny);
+	if (VERBOSE) {
+		printf("%f\n", t - lastT);
+	}
 	lastT = t;
 	glutSwapBuffers();
 }

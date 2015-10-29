@@ -11,24 +11,24 @@
 
 #include "main.h"
 
-GLuint model_matrix_buffer;
-GLuint test_buffer;
+GLuint modelMatrixBuffer;
+GLuint testBuffer;
 
-GLuint position_loc = 0;
-GLuint normal_loc   = 1;
-GLuint texture_loc  = 2;
-GLuint test_loc     = 3;
-GLuint matrix_loc   = 4;
+GLuint positionLoc = 0;
+GLuint normalLoc   = 1;
+GLuint textureLoc  = 2;
+GLuint testLoc     = 3;
+GLuint matrixLoc   = 4;
 
 float* randoms;
 
 void setupInstancedVertexAttributes(GLuint prog, int count) {
 	glUseProgram(prog);
-	glGenBuffers(1, &model_matrix_buffer);
-	glGenBuffers(1, &test_buffer);
+	glGenBuffers(1, &modelMatrixBuffer);
+	glGenBuffers(1, &testBuffer);
 	srand(time(NULL));
-	randoms = malloc(count * sizeof(float));
-	for (int i = 0; i < count; i++) {
+	randoms = malloc(count * count * count * sizeof(float));
+	for (int i = 0; i < count * count * count; i++) {
 		randoms[i] = (float)rand() / (float)(RAND_MAX / 20.0) + 0.1;
 		printf("%f\n", randoms[i]);
 	}
@@ -37,53 +37,60 @@ void setupInstancedVertexAttributes(GLuint prog, int count) {
 void drawModelInstanced(Model *m, GLuint program, GLuint count, GLfloat time, mat4 transEverything) {
 	glUseProgram(program);
 	if (m != NULL)
-		glBindVertexArray(m->vao);	// Select VAO
+		glBindVertexArray(m->vao);
 	else {
 		printf("Warning warning, fuckup in drawmodelinstanced");
 		return;
 	}
-	glBindBuffer(GL_ARRAY_BUFFER, model_matrix_buffer);
 
+	// Generate data.
+	mat4 modelMatrixes[count * count * count];
+	vec3 testData[count * count * count];
+	for (GLuint x = 0; x < count; x++) {
+		for (GLuint y = 0; y < count; y++) {
+			for (GLuint z = 0; z < count; z++) {
+				int pos = x + y * count + z * count * count;
+				modelMatrixes[pos] = Mult(Mult(T(x * 2,
+																				 fmod((y * 2 - (float)time * randoms[pos]),  100),
+																				 z * 2), transEverything),
+																	 Rx(time * (pos % count + 1)));
+				modelMatrixes[pos] = Transpose(modelMatrixes[pos]);
+				testData[pos] = (vec3) { (float)x / (float)count, (float)y / (float)count, (float)z / (float)count };
+			}
+		}
+	}
+
+	// Prepare shader data fields and upload to them.
+	glBindBuffer(GL_ARRAY_BUFFER, modelMatrixBuffer);
 	for (int i = 0; i < 4; i++) {
-		glEnableVertexAttribArray(matrix_loc + i);
-		glVertexAttribPointer(matrix_loc + i,             // Location
+		glEnableVertexAttribArray(matrixLoc + i);
+		glVertexAttribPointer(matrixLoc + i,             // Location
 		                      4, GL_FLOAT, GL_FALSE,      // vec4
 		                      sizeof(mat4),               // Stride
 		                      (void*)(sizeof(vec4) * i)); // Start offset
-		glVertexAttribDivisor(matrix_loc + i, 1);
+		glVertexAttribDivisor(matrixLoc + i, 1);
 	}
-	mat4 model_matrixes[count];
-	vec3 test_data[count];
-	for (int pos = 0; pos < count; pos++) {
-		model_matrixes[pos] = Mult(Mult(Mult(transEverything,
-		                                     Ry(time + (float)pos / randoms[pos])),
-		                                T((float)pos / 300 + randoms[pos] * (float)pos / 3000, (float)pos / 75, 1)),
-		                           Rz(time * (pos % 12) + randoms[pos]));
-		model_matrixes[pos] = Transpose(model_matrixes[pos]);
-		test_data[pos] = (vec3) { (float)pos / (float)count, (float)pos / (float)count, (float)pos / (float)count };
+	glBufferData(GL_ARRAY_BUFFER, sizeof(modelMatrixes), &modelMatrixes, GL_STATIC_DRAW);
 
-	}
-	glBufferData(GL_ARRAY_BUFFER, sizeof(model_matrixes), &model_matrixes, GL_STATIC_DRAW);
-
-	glBindBuffer(GL_ARRAY_BUFFER, test_buffer);
-	glVertexAttribPointer(test_loc, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(test_data), test_data, GL_STATIC_DRAW);
-	glVertexAttribDivisor(test_loc, 1);
-	glEnableVertexAttribArray(test_loc);
+	glBindBuffer(GL_ARRAY_BUFFER, testBuffer);
+	glVertexAttribPointer(testLoc, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(testData), testData, GL_STATIC_DRAW);
+	glVertexAttribDivisor(testLoc, 1);
+	glEnableVertexAttribArray(testLoc);
 
 	glBindBuffer(GL_ARRAY_BUFFER, m->vb);
-	glVertexAttribPointer(position_loc, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glEnableVertexAttribArray(position_loc);
+	glVertexAttribPointer(positionLoc, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(positionLoc);
 
 	glBindBuffer(GL_ARRAY_BUFFER, m->nb);
-	glVertexAttribPointer(normal_loc, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glEnableVertexAttribArray(normal_loc);
+	glVertexAttribPointer(normalLoc, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(normalLoc);
 
 	if (m->texCoordArray != NULL) {
 		glBindBuffer(GL_ARRAY_BUFFER, m->tb);
-		glVertexAttribPointer(texture_loc, 2, GL_FLOAT, GL_FALSE, 0, 0);
-		glEnableVertexAttribArray(texture_loc);
+		glVertexAttribPointer(textureLoc, 2, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(textureLoc);
 	}
 
-	glDrawElementsInstanced(GL_TRIANGLES, m->numIndices, GL_UNSIGNED_INT, 0L, count);
+	glDrawElementsInstanced(GL_TRIANGLES, m->numIndices, GL_UNSIGNED_INT, 0L, count * count * count);
 }
