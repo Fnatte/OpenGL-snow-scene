@@ -42,12 +42,11 @@ vec3 cameraDirection;
 
 int nrInstances = 20000;
 
-void init(void)
-{
-  cameraPos = (vec3){1.5f, -20.0f, -10.0f};
-  cameraTarget = (vec3){10.0f, 50.0f, 0.0f};
-  cameraNormal = (vec3){0.0f, 1.0f, 0.0f};
-  lookMatrix = lookAtv(cameraPos, cameraTarget, cameraNormal);
+void init(void) {
+	cameraPos = (vec3){1.5f, -20.0f, -10.0f};
+	cameraTarget = (vec3){10.0f, 50.0f, 0.0f};
+	cameraNormal = (vec3){0.0f, 1.0f, 0.0f};
+	lookMatrix = lookAtv(cameraPos, cameraTarget, cameraNormal);
 
 	dumpInfo();
 
@@ -74,12 +73,12 @@ void init(void)
 	instancingProgram = loadShaders("./shaders/instancing.vert", "./shaders/instancing.frag");
 
 	GLfloat projectionMatrix[] = {2.0f*near/(right-left), 0.0f,
-                                (right+left)/(right-left), 0.0f,
-                                0.0f, 2.0f*near/(top-bottom),
-                                (top+bottom)/(top-bottom), 0.0f,
-                                0.0f, 0.0f, -(far + near)/(far - near),
-                                -2*far*near/(far - near),
-                                0.0f, 0.0f, -1.0f, 0.0f };
+																(right+left)/(right-left), 0.0f,
+																0.0f, 2.0f*near/(top-bottom),
+																(top+bottom)/(top-bottom), 0.0f,
+																0.0f, 0.0f, -(far + near)/(far - near),
+																-2*far*near/(far - near),
+																0.0f, 0.0f, -1.0f, 0.0f };
 
 	glUseProgram(skyboxProgram);
 	glActiveTexture(GL_TEXTURE0);
@@ -93,8 +92,7 @@ void init(void)
 	printError("init(): End");
 }
 
-void OnTimer(int value)
-{
+void OnTimer(int value) {
 	glutPostRedisplay();
 	glutTimerFunc(20, &OnTimer, value);
 	printError("OnTimer()");
@@ -129,8 +127,7 @@ void display(void) {
 	glutSwapBuffers();
 }
 
-void drawObject(mat4 transform, Model* model, GLuint p)
-{
+void drawObject(mat4 transform, Model* model, GLuint p) {
 	glUniformMatrix4fv(glGetUniformLocation(p, "transform"), 1, GL_TRUE, transform.m);
 	DrawModel(model, p, "in_Position", "in_Normal", "in_TexCoord");
 	printError("drawObject()");
@@ -153,7 +150,7 @@ void handleMouse(int x, int y)
 {
 	int width = glutGet(GLUT_WINDOW_WIDTH);
 	int height = glutGet(GLUT_WINDOW_HEIGHT);
-  cameraTarget = (vec3)
+	cameraTarget = (vec3)
 		{cos((float)x / width * M_PI * 2) * sin((float)y / height * M_PI),
 		 -(float)y / height + 0.5,
 		 sin((float)x / width * M_PI * 2) * sin((float)y / height * M_PI)};
@@ -164,8 +161,7 @@ void handleMouse(int x, int y)
 	printError("handleMouse()");
 }
 
-vec3 moveOnKeyInputRelativeCamera(vec3 in)
-{
+vec3 moveOnKeyInputRelativeCamera(vec3 in) {
 	vec3 forward;
 	vec3 leftV;
 	if(keyIsDown('x')){
@@ -177,38 +173,38 @@ vec3 moveOnKeyInputRelativeCamera(vec3 in)
 		leftV = ScalarMult(CrossProduct(cameraDirection, cameraNormal), 1.0f);
 	}
 
-  if(keyIsDown('w')) {
-    in.x += forward.x;
-    in.y += forward.y;
-    in.z += forward.z;
+	if(keyIsDown('w')) {
+		in.x += forward.x;
+		in.y += forward.y;
+		in.z += forward.z;
 	}
-  else if (keyIsDown('s')) {
-    in.x -= forward.x;
-    in.y -= forward.y;
-    in.z -= forward.z;
+	else if (keyIsDown('s')) {
+		in.x -= forward.x;
+		in.y -= forward.y;
+		in.z -= forward.z;
 	}
 
-  if(keyIsDown('a')){
+	if(keyIsDown('a')){
 		in.x -= leftV.x;
-    in.y -= leftV.y;
-    in.z -= leftV.z;
+		in.y -= leftV.y;
+		in.z -= leftV.z;
 	}
-  else if(keyIsDown('d')){
+	else if(keyIsDown('d')){
 		in.x += leftV.x;
-    in.y += leftV.y;
-    in.z += leftV.z;
+		in.y += leftV.y;
+		in.z += leftV.z;
 	}
 
-  if(keyIsDown('p')){
-    printf("(e%f, ", cameraPos.x);
-    printf("%f, ", cameraPos.y);
-    printf("%f)\n", cameraPos.z);
+	if(keyIsDown('p')){
+		printf("(e%f, ", cameraPos.x);
+		printf("%f, ", cameraPos.y);
+		printf("%f)\n", cameraPos.z);
 	}
-  if(keyIsDown('q'))
-    in.y += 0.1;
-  else if(keyIsDown('e'))
-    in.y -= 0.1;
+	if(keyIsDown('q'))
+		in.y += 0.1;
+	else if(keyIsDown('e'))
+		in.y -= 0.1;
 
 	printError("moveonkeyinputrelativecamera()");
-  return in;
+	return in;
 }
