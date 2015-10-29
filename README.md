@@ -1,9 +1,8 @@
-A lot of stuff on a screen
-==========================
+OpenGL snow scene
+=================
 
-This is a small project for a graphics programming course. It utilizes
-a couple of common methods for speeding up the rendering of massive
-scenes, amongst others object instancing.
+Yet another project for a graphics programming course. It utilizes
+amongst other things geometry instancing to speed up rendering.
 
 
 Requirements
@@ -18,7 +17,7 @@ install the requiered libraries on Ubuntu, run the following command:
 sudo apt-get install freeglut3-dev
 ```
 In addition you need to install GL.h, which is located in different
-packages depending on your card vendor and driver of choice.
+packages depending on your graphics card vendor and driver of choice.
 
 
 Installation
