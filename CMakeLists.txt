@@ -12,6 +12,7 @@ add_subdirectory (libraries)
 add_executable ( Projekt
 	main.c
 	instancing.c
+	keyboard.c
 	shaders/instancing.vert
 	shaders/instancing.frag
 	shaders/skybox.vert
