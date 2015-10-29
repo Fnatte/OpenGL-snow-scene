@@ -11,7 +11,7 @@ layout (location = 3) in vec4 test;
 
 // model_matrix will be used as a per-instance transformation
 // matrix. Note that a mat4 consumes 4 consecutive locations, so
-// this will actually sit in locations, 3, 4, 5, and 6.
+// this will actually sit in locations 4,  5, 6 and 7.
 layout (location = 4) in mat4 model_matrix;
 // The view matrix and the projection matrix are constant
 // across a draw

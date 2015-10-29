@@ -23,14 +23,17 @@ unsigned int vertexArrayObjID;
 GLuint program;
 GLuint skyboxProgram;
 GLuint instancingProgram;
+GLuint groundProgram;
 
 Model *bunny;
 Model *octagon;
 Model *skybox;
+Model *plane;
 mat4 transBunny;
 mat4 transCubes;
 mat4 transCubes1;
 mat4 transCubes2;
+mat4 transGround;
 
 GLuint skyTexture;
 
@@ -55,8 +58,10 @@ void init(void) {
 	bunny = LoadModelPlus("./models/bunnyplus.obj");
 	octagon = LoadModelPlus("./models/octagon.obj");
 	skybox = LoadModelPlus("./models/skybox.obj");
+	plane = LoadModelPlus("./models/plane2.obj");
 
 	transBunny = T(34.4, 6.4, -30.4);
+	transGround = T(0.0, 0.0, 0.0);
 	transCubes = T(-2.2, -2.3, 10.2);
 	transCubes1 = T(88, -2.3, 10.2);
 	transCubes2 = T(-88, -2.3, 10.2);
@@ -73,14 +78,18 @@ void init(void) {
 	// Load and compile shader
 	skyboxProgram = loadShaders("./shaders/skybox.vert", "./shaders/skybox.frag");
 	instancingProgram = loadShaders("./shaders/instancing.vert", "./shaders/instancing.frag");
+	groundProgram = loadShaders("./shaders/ground.vert", "./shaders/ground.frag");
 
-	GLfloat projectionMatrix[] = {2.0f*near/(right-left), 0.0f,
-																(right+left)/(right-left), 0.0f,
-																0.0f, 2.0f*near/(top-bottom),
-																(top+bottom)/(top-bottom), 0.0f,
-																0.0f, 0.0f, -(far + near)/(far - near),
-																-2*far*near/(far - near),
-																0.0f, 0.0f, -1.0f, 0.0f };
+	GLfloat projectionMatrix[] = {
+		2.0f*near/(right-left), 0.0f,
+		(right+left)/(right-left), 0.0f,
+		0.0f, 2.0f*near/(top-bottom),
+		(top+bottom)/(top-bottom), 0.0f,
+		0.0f, 0.0f,
+		-(far + near)/(far - near), -2*far*near/(far - near),
+		0.0f, 0.0f,
+		-1.0f, 0.0f 
+	};
 
 	glUseProgram(skyboxProgram);
 	glActiveTexture(GL_TEXTURE0);
@@ -91,6 +100,9 @@ void init(void) {
 	glUniformMatrix4fv(glGetUniformLocation(instancingProgram, "projectionMatrix"), 1, GL_TRUE, projectionMatrix);
 	glUniform1i(glGetUniformLocation(instancingProgram, "texUnit"), 0);
 	setupInstancedVertexAttributes(instancingProgram, nrInstances);
+
+	initializeGround(plane, groundProgram, skyTexture);
+
 	printError("init(): End");
 }
 
@@ -109,6 +121,7 @@ void display(void) {
 	GLfloat t = (GLfloat)glutGet(GLUT_ELAPSED_TIME) / 1000;
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+	// Draw skybox
 	glUseProgram(skyboxProgram);
 	glUniformMatrix4fv(glGetUniformLocation(skyboxProgram, "lookMatrix"), 1, GL_TRUE, lookMatrix.m);
 	glBindTexture(GL_TEXTURE_2D, skyTexture);
@@ -123,13 +136,18 @@ void display(void) {
 	glUniformMatrix4fv(glGetUniformLocation(instancingProgram, "viewMatrix"), 1, GL_TRUE, lookMatrix.m);
 
 	drawModelInstanced(octagon, instancingProgram, nrInstances, t, transCubes);
-	drawModelInstanced(bunny, instancingProgram, 5, t, transBunny);
+	drawModelInstanced(bunny, instancingProgram, 10, t, transBunny);
+
+	drawGround(lookMatrix.m);
+
 	if (VERBOSE) {
 		printf("%f\n", t - lastT);
 	}
+
 	lastT = t;
 	glutSwapBuffers();
 }
+
 
 void drawObject(mat4 transform, Model* model, GLuint p) {
 	glUniformMatrix4fv(glGetUniformLocation(p, "transform"), 1, GL_TRUE, transform.m);

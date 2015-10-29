@@ -29,3 +29,6 @@ build/
 *.exe
 *.out
 *.app
+
+# General files
+*.swp
