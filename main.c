@@ -31,7 +31,6 @@ mat4 transCubes2;
 mat4 transGround;
 
 GLuint skyTexture;
-GLuint groundTexture;
 
 GLfloat lastT = 0;
 
@@ -53,7 +52,6 @@ void init(void) {
 	transCubes2 = T(-88, -2.3, 10.2);
 
 	LoadTGATextureSimple("./textures/SkyBox512.tga", &skyTexture);
-	LoadTGATextureSimple("./textures/red.tga", &groundTexture);
 
 	printError("GL inits");
 	glClearColor(0.0, 0.0, 0.0, 0);
@@ -77,7 +75,7 @@ void init(void) {
 
 	glUseProgram(groundProgram);
 	glUniform1i(glGetUniformLocation(groundProgram, "texUnit"), 0);
-	initializeGround(plane, groundProgram, groundTexture);
+	initializeGround(plane, groundProgram);
 
 	printError("init(): End");
 }
