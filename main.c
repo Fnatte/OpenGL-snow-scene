@@ -113,8 +113,6 @@ void display(void) {
 	drawModelInstanced(octagon, instancingProgram, nrInstances, t, transCubes);
 
 	// Draw ground
-	glUseProgram(groundProgram);
-	glUniformMatrix4fv(glGetUniformLocation(groundProgram, "projectionViewMatrix"), 1, GL_TRUE, projectionViewMatrix.m);
 	drawGround(Mult(projectionViewMatrix, transGround));
 
 	if (VERBOSE) {

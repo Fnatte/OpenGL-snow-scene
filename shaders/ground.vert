@@ -8,7 +8,7 @@ layout (location = 1) in vec3 normal;
 // Color is a per-instance attribute
 layout (location = 2) in vec2 textureCoordinates;
 
-uniform mat4 projectionViewMatrix;
+uniform mat4 projectionViewWorldTransform;
 
 // The output of the vertex shader (matched to thead// fragment shader)
 out VERTEX {
@@ -17,7 +17,7 @@ out VERTEX {
 } vertex;
 
 void main(void) {
-	gl_Position = projectionViewMatrix * position;
+	gl_Position = projectionViewWorldTransform * position;
 	vertex.normal =  normal;
 	vertex.textureCoordinates = textureCoordinates;
 }
