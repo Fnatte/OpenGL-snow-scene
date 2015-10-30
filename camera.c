@@ -43,3 +43,8 @@ vec3 moveCameraOnKeyboard(vec3 in, vec3 cameraNormal, vec3 cameraDirection) {
 	printError("moveonkeyinputrelativecamera()");
 	return in;
 }
+
+vec3 smoothRandomMovement(vec3 in, float magnitude) {
+	GLfloat time = (GLfloat)glutGet(GLUT_ELAPSED_TIME) / 1000;
+
+}

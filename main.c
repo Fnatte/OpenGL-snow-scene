@@ -1,5 +1,6 @@
-#include <GL/gl.h>
 #include <math.h>
+#include <GL/glew.h>
+#include <GL/glut.h>
 
 #include "./libraries/GLUtilities.h"
 #include "./libraries/LoadObject.h"
@@ -8,8 +9,8 @@
 
 #include "main.h"
 #include "instancing.h"
-#include "keyboard.h"
 #include "ground.h"
+#include "camera.h"
 
 #define near 1.0
 #define far 1000.0
@@ -99,7 +100,7 @@ void init(void) {
 
 void OnTimer(int value) {
 	glutPostRedisplay();
-	glutTimerFunc(20, &OnTimer, value);
+	glutTimerFunc(16, &OnTimer, value);
 	printError("OnTimer()");
 }
 
@@ -112,8 +113,10 @@ void display(void) {
 	printError("pre display");
 	cameraPos = moveCameraOnKeyboard(cameraPos, cameraNormal, cameraDirection);
 	cameraTarget = moveCameraOnKeyboard(cameraTarget, cameraNormal, cameraDirection);
+
 	lookMatrix = lookAtv(cameraPos, cameraTarget, cameraNormal);
 	mat4 projectionViewMatrix = Mult(projectionMatrix, lookMatrix);
+
 
 	GLfloat t = (GLfloat)glutGet(GLUT_ELAPSED_TIME) / 1000;
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -171,13 +174,17 @@ void handleMouse(int x, int y) {
 
 int main(int argc, char *argv[]) {
 	glutInit(&argc, argv);
-	glutInitContextVersion(3, 2);
-	glutCreateWindow ("Lab 3");
+	glutCreateWindow ("Let it snow");
+	GLenum err = glewInit();
+	if (GLEW_OK != err) {
+				fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
+	}
+	fprintf(stdout, "Status: Using GLEW %s\n", glewGetString(GLEW_VERSION));
 	glutDisplayFunc(display);
 	glutReshapeFunc(reshape);
 	initKeymapManager();
 	glutPassiveMotionFunc(handleMouse);
 	init ();
-	glutTimerFunc(17, &OnTimer, 0);
+	glutTimerFunc(16, &OnTimer, 0);
 	glutMainLoop();
 }

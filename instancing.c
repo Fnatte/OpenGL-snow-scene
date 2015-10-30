@@ -1,8 +1,6 @@
-#include <time.h>
 #include <stdlib.h>
 #include <math.h>
-#include <GL/gl.h>
-#include <GL/glext.h>
+#include <GL/glew.h>
 
 #include "./libraries/GLUtilities.h"
 #include "./libraries/LoadObject.h"
@@ -10,6 +8,7 @@
 #include "./libraries/VectorUtils3.h"
 
 #include "main.h"
+#include "utilities.h"
 
 GLuint modelMatrixBuffer;
 GLuint testBuffer;
@@ -21,16 +20,15 @@ GLuint testLoc     = 3;
 GLuint matrixLoc   = 4;
 
 float* randoms;
+float* randoms2;
 
 void setupInstancedVertexAttributes(GLuint prog, int count) {
 	glUseProgram(prog);
 	glGenBuffers(1, &modelMatrixBuffer);
 	glGenBuffers(1, &testBuffer);
-	srand(time(NULL));
-	randoms = malloc(count * count * count * sizeof(float));
-	for (int i = 0; i < count * count * count; i++) {
-		randoms[i] = (float)rand() / (float)(RAND_MAX / 20.0) + 0.1;
-	}
+
+	randoms = getRandFloatArray(count * count * count, 1.0, 4.0);
+	randoms2 = getRandFloatArray(count * count * count, 1.0, 4.0);
 }
 
 void drawModelInstanced(Model *m, GLuint program, GLuint count, GLfloat time, mat4 transEverything) {
@@ -49,12 +47,14 @@ void drawModelInstanced(Model *m, GLuint program, GLuint count, GLfloat time, ma
 		for (GLuint y = 0; y < count; y++) {
 			for (GLuint z = 0; z < count; z++) {
 				int pos = x + y * count + z * count * count;
-				modelMatrixes[pos] = Mult(Mult(T(x * 2,
-																				 fmod((y * 2 - (float)time * randoms[pos]),  100),
-																				 z * 2), transEverything),
-																	 Rx(time * (pos % count + 1)));
+				modelMatrixes[pos] = Mult(Mult(Mult(T(x * 4 + randoms[pos],
+				                                      fmod(-(time * (randoms[pos] + 10.0) + (float)pos),  100),
+				                                      z * 4 + randoms2[pos]), transEverything),
+				                               Rx(time * (randoms[pos + 1] - 5.0))),
+				                          Rz(time * (randoms2[pos] - 5)));
 				modelMatrixes[pos] = Transpose(modelMatrixes[pos]);
-				testData[pos] = (vec3) { (float)x / (float)count, (float)y / (float)count, (float)z / (float)count };
+				testData[pos] = (vec3)
+					{ (float)x / (float)count, (float)y / (float)count, (float)z / (float)count };
 			}
 		}
 	}
