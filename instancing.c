@@ -53,7 +53,7 @@ void drawModelInstanced(Model *m, GLuint program, GLuint count, GLfloat time, ma
 																z * 4 + randoms[pos]), transEverything),
 												 Rx(time * (randoms[pos] - 1.0))),
 										Rz(time * (randoms[pos + 1] - 1.0))),
-							 S((6 - randoms[pos])/2, (6 - randoms[pos])/2, (6 - randoms[pos])/2));
+							 S((6 - randoms[pos])/4, (6 - randoms[pos])/4, (6 - randoms[pos])/4));
 				instanceTransforms[pos] = Transpose(instanceTransforms[pos]);
 				testData[pos] = (vec3)
 					{ (float)x / (float)count, (float)y / (float)count, (float)z / (float)count };
