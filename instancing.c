@@ -10,6 +10,7 @@
 #include "main.h"
 #include "utilities.h"
 
+
 GLuint instanceTransBuffer;
 GLuint testBuffer;
 
@@ -20,7 +21,7 @@ GLuint testLoc     = 3;
 GLuint matrixLoc   = 4;
 
 float* randoms;
-float* randoms2;
+
 
 void setupInstancedVertexAttributes(GLuint prog, int count) {
 	glUseProgram(prog);
@@ -28,7 +29,6 @@ void setupInstancedVertexAttributes(GLuint prog, int count) {
 	glGenBuffers(1, &testBuffer);
 
 	randoms = getRandFloatArray(count * count * count, 1.0, 4.0);
-	randoms2 = getRandFloatArray(count * count * count, 1.0, 4.0);
 }
 
 void drawModelInstanced(Model *m, GLuint program, GLuint count, GLfloat time, mat4 transEverything) {
@@ -48,11 +48,12 @@ void drawModelInstanced(Model *m, GLuint program, GLuint count, GLfloat time, ma
 			for (GLuint z = 0; z < count; z++) {
 				int pos = x + y * count + z * count * count;
 				instanceTransforms[pos] =
-				  Mult(Mult(Mult(T(x * 4 + randoms[pos],
-				                   fmod(-(time * (randoms[pos] + 10.0) + (float)pos),  100),
-				                   z * 4 + randoms2[pos]), transEverything),
-				            Rx(time * (randoms[pos + 1] - 5.0))),
-				       Rz(time * (randoms2[pos] - 5)));
+				  Mult(Mult(Mult(Mult(T(x * 4 + randoms[pos],
+																fmod(-(time * (randoms[pos] + 12.0) + (float)pos), 100),
+																z * 4 + randoms[pos]), transEverything),
+												 Rx(time * (randoms[pos] - 1.0))),
+										Rz(time * (randoms[pos + 1] - 1.0))),
+							 S((6 - randoms[pos])/2, (6 - randoms[pos])/2, (6 - randoms[pos])/2));
 				instanceTransforms[pos] = Transpose(instanceTransforms[pos]);
 				testData[pos] = (vec3)
 					{ (float)x / (float)count, (float)y / (float)count, (float)z / (float)count };

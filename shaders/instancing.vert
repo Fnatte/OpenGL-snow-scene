@@ -18,8 +18,7 @@ layout (location = 4) in mat4 instanceTrans;
 uniform mat4 projectionViewMatrix;
 
 // The output of the vertex shader (matched to thead// fragment shader)
-out VERTEX
-{
+out VERTEX {
 	vec3 normal;
 	vec2 textureCoordinates;
 	vec4 test;
