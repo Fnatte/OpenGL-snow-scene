@@ -1,5 +1,5 @@
-#include <math.h>
 #include <GL/gl.h>
+#include <math.h>
 
 #include "./libraries/GLUtilities.h"
 #include "./libraries/LoadObject.h"
@@ -35,11 +35,13 @@ mat4 transCubes1;
 mat4 transCubes2;
 mat4 transGround;
 
+
 GLuint skyTexture;
 GLuint groundTexture;
 
 GLfloat lastT = 0;
 
+mat4 projectionMatrix;
 mat4 lookMatrix;
 vec3 cameraPos;
 vec3 cameraTarget;
@@ -49,8 +51,8 @@ vec3 cameraDirection;
 int nrInstances = 20;
 
 void init(void) {
-	cameraPos = (vec3){1.5f, -20.0f, -10.0f};
-	cameraTarget = (vec3){10.0f, 50.0f, 0.0f};
+	cameraPos = (vec3){1.5f, 20.0f, -10.0f};
+	cameraTarget = (vec3){10.0f, 5.0f, 0.0f};
 	cameraNormal = (vec3){0.0f, 1.0f, 0.0f};
 	lookMatrix = lookAtv(cameraPos, cameraTarget, cameraNormal);
 
@@ -60,24 +62,13 @@ void init(void) {
 	skybox = LoadModelPlus("./models/skybox.obj");
 	plane = LoadModelPlus("./models/plane2.obj");
 
-	transGround = T(0, 0, 10);
+	transGround = T(0, 0, 0);
 	transCubes = T(-2.2, -2.3, 10.2);
 	transCubes1 = T(88, -2.3, 10.2);
 	transCubes2 = T(-88, -2.3, 10.2);
 
 	LoadTGATextureSimple("./textures/SkyBox512.tga", &skyTexture);
 	LoadTGATextureSimple("./textures/red.tga", &groundTexture);
-
-	GLfloat projectionMatrix[] = {
-		2.0f*near/(right-left), 0.0f,
-		(right+left)/(right-left), 0.0f,
-		0.0f, 2.0f*near/(top-bottom),
-		(top+bottom)/(top-bottom), 0.0f,
-		0.0f, 0.0f,
-		-(far + near)/(far - near), -2*far*near/(far - near),
-		0.0f, 0.0f,
-		-1.0f, 0.0f 
-	};
 
 	printError("GL inits");
 	glClearColor(0.0, 0.0, 0.0, 0);
@@ -91,21 +82,17 @@ void init(void) {
 	instancingProgram = loadShaders("./shaders/instancing.vert", "./shaders/instancing.frag");
 	groundProgram = loadShaders("./shaders/ground.vert", "./shaders/ground.frag");
 
-
 	glUseProgram(skyboxProgram);
 	glActiveTexture(GL_TEXTURE0);
 	glUniform1i(glGetUniformLocation(skyboxProgram, "texUnit"), 0);
-	glUniformMatrix4fv(glGetUniformLocation(skyboxProgram, "projectionMatrix"), 1, GL_TRUE, projectionMatrix);
 
 	glUseProgram(instancingProgram);
-	glUniformMatrix4fv(glGetUniformLocation(instancingProgram, "projectionMatrix"), 1, GL_TRUE, projectionMatrix);
 	glUniform1i(glGetUniformLocation(instancingProgram, "texUnit"), 0);
 	setupInstancedVertexAttributes(instancingProgram, nrInstances);
 
 	glUseProgram(groundProgram);
-	glUniformMatrix4fv(glGetUniformLocation(groundProgram, "projectionMatrix"), 1, GL_TRUE, projectionMatrix);
 	glUniform1i(glGetUniformLocation(groundProgram, "texUnit"), 0);
-	initializeGround(octagon, groundProgram, groundTexture);
+	initializeGround(plane, groundProgram, groundTexture);
 
 	printError("init(): End");
 }
@@ -116,32 +103,40 @@ void OnTimer(int value) {
 	printError("OnTimer()");
 }
 
+void reshape(GLsizei w, GLsizei h) {
+	glViewport(0, 0, w, h);
+	projectionMatrix = perspective(90, (GLfloat)w/(GLfloat)h, 0.1, 1000);
+}
+
 void display(void) {
 	printError("pre display");
 	cameraPos = moveCameraOnKeyboard(cameraPos, cameraNormal, cameraDirection);
 	cameraTarget = moveCameraOnKeyboard(cameraTarget, cameraNormal, cameraDirection);
 	lookMatrix = lookAtv(cameraPos, cameraTarget, cameraNormal);
+	mat4 projectionViewMatrix = Mult(projectionMatrix, lookMatrix);
 
 	GLfloat t = (GLfloat)glutGet(GLUT_ELAPSED_TIME) / 1000;
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	drawGround(lookMatrix, transGround);
-
 	// Draw skybox
 	glUseProgram(skyboxProgram);
-	glUniformMatrix4fv(glGetUniformLocation(skyboxProgram, "lookMatrix"), 1, GL_TRUE, lookMatrix.m);
+	glUniformMatrix4fv(glGetUniformLocation(skyboxProgram, "projectionViewMatrix"), 1, GL_TRUE, projectionViewMatrix.m);
 	glBindTexture(GL_TEXTURE_2D, skyTexture);
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
 	glUniformMatrix4fv(glGetUniformLocation(skyboxProgram, "transform"), 1, GL_TRUE, T(cameraPos.x, cameraPos.y, cameraPos.z).m);
-	// DrawModel(skybox, skyboxProgram, "in_Position", NULL, "in_TexCoord");
+	DrawModel(skybox, skyboxProgram, "in_Position", NULL, "in_TexCoord");
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
 
+	// Draw instances
 	glUseProgram(instancingProgram);
-	glUniformMatrix4fv(glGetUniformLocation(instancingProgram, "viewMatrix"), 1, GL_TRUE, lookMatrix.m);
-	// drawModelInstanced(octagon, instancingProgram, nrInstances, t, transCubes);
+	glUniformMatrix4fv(glGetUniformLocation(instancingProgram, "projectionViewMatrix"), 1, GL_TRUE, projectionViewMatrix.m);
+	drawModelInstanced(octagon, instancingProgram, nrInstances, t, transCubes);
 
+	// Draw ground
+	glUniformMatrix4fv(glGetUniformLocation(groundProgram, "projectionMatrix"), 1, GL_TRUE, projectionMatrix.m);
+	drawGround(Mult(projectionViewMatrix, transGround));
 
 	if (VERBOSE) {
 		printf("%f\n", t - lastT);
@@ -179,9 +174,10 @@ int main(int argc, char *argv[]) {
 	glutInitContextVersion(3, 2);
 	glutCreateWindow ("Lab 3");
 	glutDisplayFunc(display);
+	glutReshapeFunc(reshape);
 	initKeymapManager();
 	glutPassiveMotionFunc(handleMouse);
 	init ();
-	glutTimerFunc(16.7, &OnTimer, 0);
+	glutTimerFunc(17, &OnTimer, 0);
 	glutMainLoop();
 }

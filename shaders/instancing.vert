@@ -15,8 +15,7 @@ layout (location = 3) in vec4 test;
 layout (location = 4) in mat4 model_matrix;
 // The view matrix and the projection matrix are constant
 // across a draw
-uniform mat4 viewMatrix;
-uniform mat4 projectionMatrix;
+uniform mat4 projectionViewMatrix;
 
 // The output of the vertex shader (matched to thead// fragment shader)
 out VERTEX
@@ -28,13 +27,9 @@ out VERTEX
 
 void main(void)
 {
-	// Construct a model-view matrix from the uniform view matrix
-	// and the per-instance model matrix.
-	mat4 model_view_matrix = viewMatrix * model_matrix;
-
 	// Transform position by the model-view matrix, then by thead
 	// projection matrix.
-	gl_Position = projectionMatrix * viewMatrix * model_matrix * position;
+	gl_Position = projectionViewMatrix * model_matrix * position;
 	// Transform the normal by the upper-left-3x3-submatrix of thead    // model-view matrix
 	vertex.normal =  normal;
 	// Pass the per-instance color through to the fragment shader.

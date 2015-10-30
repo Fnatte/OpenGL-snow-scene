@@ -21,9 +21,9 @@ void initializeGround(Model *_model, GLuint _program, GLuint _texture) {
 	texture = _texture;
 }
 
-void drawGround(mat4 lookMatrix, mat4 m) {
+void drawGround(mat4 matrix) {
 	glUseProgram(program);
 	glBindTexture(GL_TEXTURE_2D, texture);
-	glUniformMatrix4fv(glGetUniformLocation(program, "viewMatrix"), 1, GL_TRUE, lookMatrix.m);
+	glUniformMatrix4fv(glGetUniformLocation(program, "matrix"), 1, GL_TRUE, matrix);
 	drawModelWithLocations(model, positionLocation, normalLocation, textureLocation);
 }
