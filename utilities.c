@@ -2,29 +2,32 @@
 #include <stdlib.h>
 #include <math.h>
 #include <time.h>
+
 #include "./libraries/LoadObject.h"
 
-void drawModelWithLocations(Model *m, GLuint positionLocation, GLuint normalLocation, GLuint textureLocation)
+
+void drawModelWithLocations(Model *m, GLuint positionLoc, GLuint normalLoc, GLuint textureLoc)
 {
 	glBindVertexArray(m->vao);
 
-	// Position	
+	// Position
 	glBindBuffer(GL_ARRAY_BUFFER, m->vb);
-	glVertexAttribPointer(positionLocation, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glEnableVertexAttribArray(positionLocation);
-	
+	glVertexAttribPointer(positionLoc, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(positionLoc);
+
 	// Normal
 	glBindBuffer(GL_ARRAY_BUFFER, m->nb);
-	glVertexAttribPointer(normalLocation, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glEnableVertexAttribArray(normalLocation);
-	
+	glVertexAttribPointer(normalLoc, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(normalLoc);
+
 	// Texture
 	glBindBuffer(GL_ARRAY_BUFFER, m->tb);
-	glVertexAttribPointer(textureLocation, 2, GL_FLOAT, GL_FALSE, 0, 0);
-	glEnableVertexAttribArray(textureLocation);
-	
+	glVertexAttribPointer(textureLoc, 2, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(textureLoc);
+
 	glDrawElements(GL_TRIANGLES, m->numIndices, GL_UNSIGNED_INT, 0L);
 }
+
 
 float* getRandFloatArray(int size, float upperLimit, float lowerLimit) {
 	float* randoms = malloc(size * sizeof(float));

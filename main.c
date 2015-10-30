@@ -12,14 +12,8 @@
 #include "ground.h"
 #include "camera.h"
 
-#define near 1.0
-#define far 1000.0
-#define right 0.5
-#define left -0.5
-#define top 0.5
-#define bottom -0.5
-
 #define VERBOSE 0
+
 
 // vertex array object
 unsigned int vertexArrayObjID;
@@ -36,28 +30,18 @@ mat4 transCubes1;
 mat4 transCubes2;
 mat4 transGround;
 
-
 GLuint skyTexture;
 GLuint groundTexture;
 
 GLfloat lastT = 0;
 
-mat4 projectionMatrix;
-mat4 lookMatrix;
-vec3 cameraPos;
-vec3 cameraTarget;
-vec3 cameraNormal;
-vec3 cameraDirection;
-
 int nrInstances = 20;
 
-void init(void) {
-	cameraPos = (vec3){1.5f, 20.0f, -10.0f};
-	cameraTarget = (vec3){10.0f, 5.0f, 0.0f};
-	cameraNormal = (vec3){0.0f, 1.0f, 0.0f};
-	lookMatrix = lookAtv(cameraPos, cameraTarget, cameraNormal);
 
+void init(void) {
 	dumpInfo();
+
+	initCamera();
 
 	octagon = LoadModelPlus("./models/octagon.obj");
 	skybox = LoadModelPlus("./models/skybox.obj");
@@ -104,19 +88,9 @@ void OnTimer(int value) {
 	printError("OnTimer()");
 }
 
-void reshape(GLsizei w, GLsizei h) {
-	glViewport(0, 0, w, h);
-	projectionMatrix = perspective(90, (GLfloat)w/(GLfloat)h, 0.1, 1000);
-}
-
 void display(void) {
 	printError("pre display");
-	cameraPos = moveCameraOnKeyboard(cameraPos, cameraNormal, cameraDirection);
-	cameraTarget = moveCameraOnKeyboard(cameraTarget, cameraNormal, cameraDirection);
-
-	lookMatrix = lookAtv(cameraPos, cameraTarget, cameraNormal);
-	mat4 projectionViewMatrix = Mult(projectionMatrix, lookMatrix);
-
+	mat4 projectionViewMatrix = getProjectionViewMatrix();
 
 	GLfloat t = (GLfloat)glutGet(GLUT_ELAPSED_TIME) / 1000;
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -127,7 +101,8 @@ void display(void) {
 	glBindTexture(GL_TEXTURE_2D, skyTexture);
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
-	glUniformMatrix4fv(glGetUniformLocation(skyboxProgram, "transform"), 1, GL_TRUE, T(cameraPos.x, cameraPos.y, cameraPos.z).m);
+	mat4 cameraTrans = T(getCameraPos().x, getCameraPos().y, getCameraPos().z);
+	glUniformMatrix4fv(glGetUniformLocation(skyboxProgram, "transform"), 1, GL_TRUE, cameraTrans.m);
 	DrawModel(skybox, skyboxProgram, "in_Position", NULL, "in_TexCoord");
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
@@ -138,7 +113,8 @@ void display(void) {
 	drawModelInstanced(octagon, instancingProgram, nrInstances, t, transCubes);
 
 	// Draw ground
-	glUniformMatrix4fv(glGetUniformLocation(groundProgram, "projectionMatrix"), 1, GL_TRUE, projectionMatrix.m);
+	glUseProgram(groundProgram);
+	glUniformMatrix4fv(glGetUniformLocation(groundProgram, "projectionViewMatrix"), 1, GL_TRUE, projectionViewMatrix.m);
 	drawGround(Mult(projectionViewMatrix, transGround));
 
 	if (VERBOSE) {
@@ -155,22 +131,6 @@ void drawObject(mat4 transform, Model* model, GLuint p) {
 	DrawModel(model, p, "in_Position", "in_Normal", "in_TexCoord");
 	printError("drawObject()");
 }
-
-
-void handleMouse(int x, int y) {
-	int width = glutGet(GLUT_WINDOW_WIDTH);
-	int height = glutGet(GLUT_WINDOW_HEIGHT);
-	cameraTarget = (vec3)
-		{cos((float)x / width * M_PI * 2) * sin((float)y / height * M_PI),
-		 -(float)y / height + 0.5,
-		 sin((float)x / width * M_PI * 2) * sin((float)y / height * M_PI)};
-	cameraTarget = VectorAdd(cameraTarget, cameraPos);
-
-	lookMatrix = lookAtv(cameraPos, cameraTarget, cameraNormal);
-	cameraDirection = Normalize(VectorSub(cameraTarget, cameraPos));
-	printError("handleMouse()");
-}
-
 
 int main(int argc, char *argv[]) {
 	glutInitContextVersion(3, 2);
