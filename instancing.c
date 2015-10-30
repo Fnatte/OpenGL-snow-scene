@@ -10,7 +10,7 @@
 #include "main.h"
 #include "utilities.h"
 
-GLuint modelMatrixBuffer;
+GLuint instanceTransBuffer;
 GLuint testBuffer;
 
 GLuint positionLoc = 0;
@@ -24,7 +24,7 @@ float* randoms2;
 
 void setupInstancedVertexAttributes(GLuint prog, int count) {
 	glUseProgram(prog);
-	glGenBuffers(1, &modelMatrixBuffer);
+	glGenBuffers(1, &instanceTransBuffer);
 	glGenBuffers(1, &testBuffer);
 
 	randoms = getRandFloatArray(count * count * count, 1.0, 4.0);
@@ -41,18 +41,19 @@ void drawModelInstanced(Model *m, GLuint program, GLuint count, GLfloat time, ma
 	}
 
 	// Generate data.
-	mat4 modelMatrixes[count * count * count];
+	mat4 instanceTransforms[count * count * count];
 	vec3 testData[count * count * count];
 	for (GLuint x = 0; x < count; x++) {
 		for (GLuint y = 0; y < count; y++) {
 			for (GLuint z = 0; z < count; z++) {
 				int pos = x + y * count + z * count * count;
-				modelMatrixes[pos] = Mult(Mult(Mult(T(x * 4 + randoms[pos],
-				                                      fmod(-(time * (randoms[pos] + 10.0) + (float)pos),  100),
-				                                      z * 4 + randoms2[pos]), transEverything),
-				                               Rx(time * (randoms[pos + 1] - 5.0))),
-				                          Rz(time * (randoms2[pos] - 5)));
-				modelMatrixes[pos] = Transpose(modelMatrixes[pos]);
+				instanceTransforms[pos] =
+				  Mult(Mult(Mult(T(x * 4 + randoms[pos],
+				                   fmod(-(time * (randoms[pos] + 10.0) + (float)pos),  100),
+				                   z * 4 + randoms2[pos]), transEverything),
+				            Rx(time * (randoms[pos + 1] - 5.0))),
+				       Rz(time * (randoms2[pos] - 5)));
+				instanceTransforms[pos] = Transpose(instanceTransforms[pos]);
 				testData[pos] = (vec3)
 					{ (float)x / (float)count, (float)y / (float)count, (float)z / (float)count };
 			}
@@ -60,7 +61,7 @@ void drawModelInstanced(Model *m, GLuint program, GLuint count, GLfloat time, ma
 	}
 
 	// Prepare shader data fields and upload to them.
-	glBindBuffer(GL_ARRAY_BUFFER, modelMatrixBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, instanceTransBuffer);
 	for (int i = 0; i < 4; i++) {
 		glEnableVertexAttribArray(matrixLoc + i);
 		glVertexAttribPointer(matrixLoc + i,             // Location
@@ -69,7 +70,7 @@ void drawModelInstanced(Model *m, GLuint program, GLuint count, GLfloat time, ma
 		                      (void*)(sizeof(vec4) * i)); // Start offset
 		glVertexAttribDivisor(matrixLoc + i, 1);
 	}
-	glBufferData(GL_ARRAY_BUFFER, sizeof(modelMatrixes), &modelMatrixes, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(instanceTransforms), &instanceTransforms, GL_STATIC_DRAW);
 
 	glBindBuffer(GL_ARRAY_BUFFER, testBuffer);
 	glVertexAttribPointer(testLoc, 3, GL_FLOAT, GL_FALSE, 0, 0);
