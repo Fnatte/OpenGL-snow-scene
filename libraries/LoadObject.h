@@ -5,11 +5,10 @@
 extern "C" {
 #endif
 
-#include <GL/gl.h>
+#include <GL/glew.h>
 
 
-typedef struct
-{
+typedef struct {
   GLfloat* vertexArray;
   GLfloat* normalArray;
   GLfloat* texCoordArray;

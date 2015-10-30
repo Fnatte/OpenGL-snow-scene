@@ -1,18 +1,20 @@
 cmake_minimum_required (VERSION 2.8)
-project (LeapMusic)
+project (LetItSnow)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic -Wextra -pedantic-errors")
 set(CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -std=c99 -Wall")
 
 find_package(OpenGL)
 find_package(GLUT)
+find_package(GLEW)
 
 add_subdirectory (libraries)
 
 add_executable ( Projekt
 	main.c
 	instancing.c
-	keyboard.c
+	camera.c
+	utilities.c
 	shaders/instancing.vert
 	shaders/instancing.frag
 	shaders/skybox.vert
@@ -21,6 +23,7 @@ add_executable ( Projekt
 target_link_libraries ( Projekt
 	${OPENGL_LIBRARIES}
 	${GLUT_LIBRARIES}
+	${GLEW_LIBRARIES}
 	GLUtilities
 	VectorUtils3
 	LoadObject

@@ -1,8 +1,6 @@
-#include <time.h>
 #include <stdlib.h>
 #include <math.h>
-#include <GL/gl.h>
-#include <GL/glext.h>
+#include <GL/glew.h>
 
 #include "./libraries/GLUtilities.h"
 #include "./libraries/LoadObject.h"
@@ -10,6 +8,7 @@
 #include "./libraries/VectorUtils3.h"
 
 #include "main.h"
+#include "utilities.h"
 
 GLuint modelMatrixBuffer;
 GLuint testBuffer;
@@ -27,13 +26,9 @@ void setupInstancedVertexAttributes(GLuint prog, int count) {
 	glUseProgram(prog);
 	glGenBuffers(1, &modelMatrixBuffer);
 	glGenBuffers(1, &testBuffer);
-	srand(time(NULL));
-	randoms = malloc(count * count * count * sizeof(float));
-	randoms2 = malloc(count * count * count * sizeof(float));
-	for (int i = 0; i < count * count * count; i++) {
-		randoms[i] = (float)rand() / (float)(RAND_MAX / 4.0) + 1.0;
-		randoms2[i] = (float)rand() / (float)(RAND_MAX / 4.0) + 1.0;
-	}
+
+	randoms = getRandFloatArray(count * count * count, 1.0, 4.0);
+	randoms2 = getRandFloatArray(count * count * count, 1.0, 4.0);
 }
 
 void drawModelInstanced(Model *m, GLuint program, GLuint count, GLfloat time, mat4 transEverything) {
