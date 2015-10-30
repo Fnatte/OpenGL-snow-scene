@@ -11,8 +11,8 @@ vec3 cameraDirection;
 
 
 void initCamera() {
-	cameraPos = (vec3){1.5f, 20.0f, -10.0f};
-	cameraTarget = (vec3){10.0f, 5.0f, 0.0f};
+	cameraPos = (vec3){1.5f, 20.0f, -50.0f};
+	cameraTarget = (vec3){10.0f, 15.0f, 5.0f};
 	cameraNormal = (vec3){0.0f, 1.0f, 0.0f};
 	lookMatrix = lookAtv(cameraPos, cameraTarget, cameraNormal);
 }

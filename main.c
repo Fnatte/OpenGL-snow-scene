@@ -26,8 +26,6 @@ Model *octagon;
 Model *skybox;
 Model *plane;
 mat4 transCubes;
-mat4 transCubes1;
-mat4 transCubes2;
 mat4 transGround;
 
 GLuint skyTexture;
@@ -48,9 +46,7 @@ void init(void) {
 	plane = LoadModelPlus("./models/plane2.obj");
 
 	transGround = T(0, 0, 0);
-	transCubes = T(-2.2, -2.3, 10.2);
-	transCubes1 = T(88, -2.3, 10.2);
-	transCubes2 = T(-88, -2.3, 10.2);
+	transCubes = T(-10, 100, -10);
 
 	LoadTGATextureSimple("./textures/SkyBox512.tga", &skyTexture);
 	LoadTGATextureSimple("./textures/red.tga", &groundTexture);
