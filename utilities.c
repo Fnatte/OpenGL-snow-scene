@@ -1,4 +1,4 @@
-#include <GL/gl.h>
+#include <GL/glew.h>
 #include <stdlib.h>
 #include <math.h>
 #include <time.h>
@@ -24,6 +24,7 @@ void drawModelWithLocations(Model *m, GLuint positionLocation, GLuint normalLoca
 	glEnableVertexAttribArray(textureLocation);
 	
 	glDrawElements(GL_TRIANGLES, m->numIndices, GL_UNSIGNED_INT, 0L);
+}
 
 float* getRandFloatArray(int size, float upperLimit, float lowerLimit) {
 	float* randoms = malloc(size * sizeof(float));

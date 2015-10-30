@@ -173,11 +173,13 @@ void handleMouse(int x, int y) {
 
 
 int main(int argc, char *argv[]) {
+	glutInitContextVersion(3, 2);
 	glutInit(&argc, argv);
 	glutCreateWindow ("Let it snow");
+	glewExperimental = GL_TRUE;
 	GLenum err = glewInit();
 	if (GLEW_OK != err) {
-				fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
+		fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
 	}
 	fprintf(stdout, "Status: Using GLEW %s\n", glewGetString(GLEW_VERSION));
 	glutDisplayFunc(display);

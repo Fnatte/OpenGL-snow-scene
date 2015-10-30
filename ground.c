@@ -1,4 +1,4 @@
-#include <GL/gl.h>
+#include <GL/glew.h>
 
 #include "./libraries/GLUtilities.h"
 #include "./libraries/LoadObject.h"
@@ -24,6 +24,6 @@ void initializeGround(Model *_model, GLuint _program, GLuint _texture) {
 void drawGround(mat4 matrix) {
 	glUseProgram(program);
 	glBindTexture(GL_TEXTURE_2D, texture);
-	glUniformMatrix4fv(glGetUniformLocation(program, "matrix"), 1, GL_TRUE, matrix);
+	glUniformMatrix4fv(glGetUniformLocation(program, "matrix"), 1, GL_TRUE, matrix.m);
 	drawModelWithLocations(model, positionLocation, normalLocation, textureLocation);
 }
