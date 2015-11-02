@@ -20,14 +20,10 @@ struct Camera moveCameraOnKeyboard(struct Camera c);
  */
 struct Camera smoothRandomMovement(struct Camera in, float magnitude);
 
-void initCamera();
+struct Camera rotateCameraByMouse(struct Camera c, int x, int y);
 
-void handleMouse(int x, int y);
-
-void reshape(GLsizei w, GLsizei h);
-
-mat4 getProjectionViewMatrix();
-
-vec3 getCameraPos();
+mat4 getProjectionViewMatrix(struct Camera c);
 
 vec3 cameraDirection(struct Camera c);
+
+struct Camera createUserCamera(vec3 position, vec3 normal, vec3 target, float viewAngle);

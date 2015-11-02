@@ -5,17 +5,6 @@
 #include "camera.h"
 
 
-mat4 lookMatrix;
-struct Camera userCamera;
-
-void initCamera() {
-	userCamera.position = (vec3){1.5f, 20.0f, -50.0f};
-	userCamera.target = (vec3){10.0f, 15.0f, 5.0f};
-	userCamera.normal = (vec3){0.0f, 1.0f, 0.0f};
-	lookMatrix = lookAtv(userCamera.position, userCamera.target, userCamera.normal);
-}
-
-
 struct Camera moveCameraOnKeyboard(struct Camera c) {
 	vec3 forward;
 	vec3 leftV;
@@ -83,36 +72,31 @@ struct Camera smoothRandomMovement(struct Camera c, float magnitude) {
 }
 
 
-void handleMouse(int x, int y) {
+struct Camera rotateCameraByMouse(struct Camera c, int x, int y) {
 	int width = glutGet(GLUT_WINDOW_WIDTH);
 	int height = glutGet(GLUT_WINDOW_HEIGHT);
-	userCamera.target = (vec3)
+	c.target = (vec3)
 		{cos((float)x / width * M_PI * 2) * sin((float)y / height * M_PI),
 		 -(float)y / height + 0.5,
 		 sin((float)x / width * M_PI * 2) * sin((float)y / height * M_PI)};
-	userCamera.target = VectorAdd(userCamera.target, userCamera.position);
-
-	lookMatrix = lookAtv(userCamera.position, userCamera.target, userCamera.normal);
-	printError("handleMouse()");
+	c.target = VectorAdd(c.target, c.position);
+	return c;
 }
 
 
-void reshape(GLsizei w, GLsizei h) {
-	glViewport(0, 0, w, h);
-	userCamera.projection = perspective(90, (GLfloat)w/(GLfloat)h, 0.1, 1000);
+mat4 getProjectionViewMatrix(struct Camera c) {
+	mat4 lookMatrix = lookAtv(c.position, c.target, c.normal);
+	return Mult(c.projection, lookMatrix);
 }
 
-
-mat4 getProjectionViewMatrix() {
-	userCamera = moveCameraOnKeyboard(userCamera);
-	lookMatrix = lookAtv(userCamera.position, userCamera.target, userCamera.normal);
-	return Mult(userCamera.projection, lookMatrix);
-}
-
-vec3 getCameraPos() {
-	return userCamera.position;
-}
 
 vec3 cameraDirection(struct Camera c) {
 	return Normalize(VectorSub(c.target, c.position));
+}
+
+
+struct Camera createUserCamera(vec3 position, vec3 normal, vec3 target, float viewAngle) {
+	struct Camera c = (struct Camera) {position, normal, target,
+											 perspective(viewAngle, (GLfloat)glutGet(GLUT_WINDOW_X)/(GLfloat)glutGet(GLUT_WINDOW_Y), 0.1, 1000)};
+	return c;
 }

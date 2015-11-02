@@ -5,3 +5,5 @@
  * @param model The model to be drawn.
  */
 void drawObject(mat4 transform, Model* model, GLuint p);
+
+void handleMouse(int x, int y);

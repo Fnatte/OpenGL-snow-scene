@@ -15,7 +15,6 @@
 #define VERBOSE 0
 
 
-// vertex array object
 unsigned int vertexArrayObjID;
 GLuint program;
 GLuint skyboxProgram;
@@ -34,11 +33,13 @@ GLfloat lastT = 0;
 
 int nrInstances = 20;
 
+struct Camera userCamera;
+
 
 void init(void) {
 	dumpInfo();
 
-	initCamera();
+	userCamera = createUserCamera((vec3){1.5f, 20.0f, -50.0f}, (vec3){0.0f, 1.0f, 0.0f}, (vec3){10.0f, 15.0f, 5.0f}, 90.0);
 
 	octagon = LoadModelPlus("./models/octagon.obj");
 	skybox = LoadModelPlus("./models/skybox.obj");
@@ -84,7 +85,7 @@ void OnTimer(int value) {
 
 void display(void) {
 	printError("pre display");
-	mat4 projectionViewMatrix = getProjectionViewMatrix();
+	mat4 projectionViewMatrix = getProjectionViewMatrix(userCamera);
 
 	GLfloat t = (GLfloat)glutGet(GLUT_ELAPSED_TIME) / 1000;
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -95,7 +96,7 @@ void display(void) {
 	glBindTexture(GL_TEXTURE_2D, skyTexture);
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
-	mat4 cameraTrans = T(getCameraPos().x, getCameraPos().y, getCameraPos().z);
+	mat4 cameraTrans = T(userCamera.position.x, userCamera.position.y, userCamera.position.z);
 	glUniformMatrix4fv(glGetUniformLocation(skyboxProgram, "transform"), 1, GL_TRUE, cameraTrans.m);
 	DrawModel(skybox, skyboxProgram, "in_Position", NULL, "in_TexCoord");
 	glEnable(GL_CULL_FACE);
@@ -124,6 +125,15 @@ void drawObject(mat4 transform, Model* model, GLuint p) {
 	printError("drawObject()");
 }
 
+void reshapeViewport(GLsizei w, GLsizei h) {
+	glViewport(0, 0, w, h);
+	userCamera.projection = perspective(90, (GLfloat)w/(GLfloat)h, 0.1, 1000);
+}
+
+void handleMouse(int x, int y) {
+	userCamera = rotateCameraByMouse(userCamera, x, y);
+}
+
 int main(int argc, char *argv[]) {
 	glutInitContextVersion(3, 2);
 	glutInit(&argc, argv);
@@ -135,7 +145,7 @@ int main(int argc, char *argv[]) {
 	}
 	fprintf(stdout, "Status: Using GLEW %s\n", glewGetString(GLEW_VERSION));
 	glutDisplayFunc(display);
-	glutReshapeFunc(reshape);
+	glutReshapeFunc(reshapeViewport);
 	initKeymapManager();
 	glutPassiveMotionFunc(handleMouse);
 	init ();
