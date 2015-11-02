@@ -1,6 +1,8 @@
 OpenGL snow scene
 =================
 
+[![Build Status](https://travis-ci.org/Rovanion/OpenGL-snow-scene.svg?branch=master)](https://travis-ci.org/Rovanion/OpenGL-snow-scene)
+
 Yet another project for a graphics programming course. It utilizes
 amongst other things geometry instancing to speed up rendering.
 
@@ -14,10 +16,10 @@ tested on Linux, CentOS 6 and Ubuntu 14.04 specifically. In order to
 install the requiered libraries on Ubuntu, run the following command:
 
 ```
-sudo apt-get install freeglut3-dev
+sudo apt-get install freeglut3-dev mesa-common-dev libglew-dev
 ```
-In addition you need to install GL.h, which is located in different
-packages depending on your graphics card vendor and driver of choice.
+In addition you probably need to install an appropriate graphics
+driver.
 
 
 Installation

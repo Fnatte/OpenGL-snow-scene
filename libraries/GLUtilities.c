@@ -16,13 +16,13 @@
 #include <stdio.h>
 #include <stddef.h>
 #include <string.h>
+#include <GL/glew.h>
 
 #include "GLUtilities.h"
 
 // Shader loader
 
-char* readFile(char *file)
-{
+char* readFile(char *file) {
 	FILE *fptr;
 	long length;
 	char *buf;

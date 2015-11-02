@@ -1,0 +1,12 @@
+language: cpp
+compiler:
+  - clang++
+  - gcc
+sudo: yes
+before_script:
+  - sudo apt-get update
+  - sudo apt-get install freeglut3-dev mesa-common-dev libglew-dev libxmu-dev
+  - cd build
+  - cmake ..
+script:
+  - make

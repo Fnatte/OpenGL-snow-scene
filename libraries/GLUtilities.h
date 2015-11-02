@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#include <GL/gl.h>
+#include <GL/glew.h>
 #include <GL/freeglut.h>
 
 
