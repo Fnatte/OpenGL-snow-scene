@@ -34,3 +34,7 @@ void drawGround(mat4 matrix) {
 	glUniformMatrix4fv(glGetUniformLocation(program, "projectionViewWorldTransform"), 1, GL_TRUE, matrix.m);
 	drawModelWithLocations(model, positionLocation, normalLocation, textureLocation);
 }
+
+void drawGroundWithProgram(GLuint program) {
+	DrawModel(model, program, "in_Position", NULL, NULL);
+}
