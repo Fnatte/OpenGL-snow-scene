@@ -37,6 +37,7 @@ struct Camera userCamera;
 
 
 void init(void) {
+	printError ("before init()");
 	dumpInfo();
 
 	userCamera = createUserCamera((vec3){1.5f, 20.0f, -50.0f}, (vec3){0.0f, 1.0f, 0.0f}, (vec3){10.0f, 15.0f, 5.0f}, 90.0);
@@ -140,6 +141,8 @@ int main(int argc, char *argv[]) {
 	glutCreateWindow ("Let it snow");
 	glewExperimental = GL_TRUE;
 	GLenum err = glewInit();
+	// https://www.opengl.org/wiki/OpenGL_Loading_Library#GLEW_.28OpenGL_Extension_Wrangler.29
+	printError ("It should be safe to ignore this, see comment in code.");
 	if (GLEW_OK != err) {
 		fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
 	}
