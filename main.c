@@ -11,6 +11,7 @@
 #include "instancing.h"
 #include "ground.h"
 #include "camera.h"
+#include "shadow.h"
 
 #define VERBOSE 0
 
@@ -20,10 +21,13 @@ GLuint program;
 GLuint skyboxProgram;
 GLuint instancingProgram;
 GLuint groundProgram;
+GLuint plainTextureProgram;
+GLuint depthProgram;
 
 Model *octagon;
 Model *skybox;
 Model *plane;
+Model *square;
 mat4 transCubes;
 mat4 transGround;
 
@@ -35,6 +39,18 @@ int nrInstances = 20;
 
 struct Camera userCamera;
 
+GLfloat squareData[] = {
+	-1,-1,0,
+	-1,1, 0,
+	1,1, 0,
+	1,-1, 0};
+GLfloat squareTexCoord[] = {
+	0, 0,
+	0, 1,
+	1, 1,
+	1, 0};
+GLuint squareIndices[] = {0, 1, 2, 0, 2, 3};
+
 
 void init(void) {
 	dumpInfo();
@@ -44,6 +60,7 @@ void init(void) {
 	octagon = LoadModelPlus("./models/octagon.obj");
 	skybox = LoadModelPlus("./models/skybox.obj");
 	plane = LoadModelPlus("./models/plane2.obj");
+	square = LoadDataToModel(squareData, NULL, squareTexCoord, NULL, squareIndices, 4, 6);
 
 	transGround = T(0, 0, 0);
 	transCubes = T(-10, 100, -10);
@@ -61,6 +78,8 @@ void init(void) {
 	skyboxProgram = loadShaders("./shaders/skybox.vert", "./shaders/skybox.frag");
 	instancingProgram = loadShaders("./shaders/instancing.vert", "./shaders/instancing.frag");
 	groundProgram = loadShaders("./shaders/ground.vert", "./shaders/ground.frag");
+	plainTextureProgram = loadShaders("./shaders/plainTexture.vert", "./shaders/plainTexture.frag");
+	depthProgram = loadShaders("./shaders/depth.vert", "./shaders/depth.frag");
 
 	glUseProgram(skyboxProgram);
 	glActiveTexture(GL_TEXTURE0);
@@ -73,6 +92,8 @@ void init(void) {
 	glUseProgram(groundProgram);
 	glUniform1i(glGetUniformLocation(groundProgram, "texUnit"), 0);
 	initializeGround(plane, groundProgram);
+
+	initShadowMap();
 
 	printError("init(): End");
 }
@@ -88,27 +109,50 @@ void display(void) {
 	mat4 projectionViewMatrix = getProjectionViewMatrix(userCamera);
 
 	GLfloat t = (GLfloat)glutGet(GLUT_ELAPSED_TIME) / 1000;
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	// Draw skybox
-	glUseProgram(skyboxProgram);
-	glUniformMatrix4fv(glGetUniformLocation(skyboxProgram, "projectionViewMatrix"), 1, GL_TRUE, projectionViewMatrix.m);
-	glBindTexture(GL_TEXTURE_2D, skyTexture);
-	glDisable(GL_DEPTH_TEST);
-	glDisable(GL_CULL_FACE);
-	mat4 cameraTrans = T(userCamera.position.x, userCamera.position.y, userCamera.position.z);
-	glUniformMatrix4fv(glGetUniformLocation(skyboxProgram, "transform"), 1, GL_TRUE, cameraTrans.m);
-	DrawModel(skybox, skyboxProgram, "in_Position", NULL, "in_TexCoord");
-	glEnable(GL_CULL_FACE);
-	glEnable(GL_DEPTH_TEST);
+	mat4 groundTransform = Mult(projectionViewMatrix, transGround);
 
-	// Draw instances
+	beginRenderShadowMap();
 	glUseProgram(instancingProgram);
 	glUniformMatrix4fv(glGetUniformLocation(instancingProgram, "projectionViewMatrix"), 1, GL_TRUE, projectionViewMatrix.m);
 	drawModelInstanced(octagon, instancingProgram, nrInstances, t, transCubes);
+	// glUseProgram(depthProgram);
+	// glUniformMatrix4fv(glGetUniformLocation(program, "projectionViewWorldTransform"), 1, GL_TRUE, groundTransform.m);
+	// drawGroundWithProgram(depthProgram);
+	drawGround(groundTransform);
+	endRenderShadowMap();
 
-	// Draw ground
-	drawGround(Mult(projectionViewMatrix, transGround));
+	// useFBO(0L, 0L, 0L);
+	// glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	// Draw skybox
+	// glUseProgram(skyboxProgram);
+	// glUniformMatrix4fv(glGetUniformLocation(skyboxProgram, "projectionViewMatrix"), 1, GL_TRUE, projectionViewMatrix.m);
+	// glBindTexture(GL_TEXTURE_2D, skyTexture);
+	// glDisable(GL_DEPTH_TEST);
+	// glDisable(GL_CULL_FACE);
+	// mat4 cameraTrans = T(userCamera.position.x, userCamera.position.y, userCamera.position.z);
+	// glUniformMatrix4fv(glGetUniformLocation(skyboxProgram, "transform"), 1, GL_TRUE, cameraTrans.m);
+	// DrawModel(skybox, skyboxProgram, "in_Position", NULL, "in_TexCoord");
+	// glEnable(GL_CULL_FACE);
+	// glEnable(GL_DEPTH_TEST);
+
+	// // Draw instances
+	// glUseProgram(instancingProgram);
+	// glUniformMatrix4fv(glGetUniformLocation(instancingProgram, "projectionViewMatrix"), 1, GL_TRUE, projectionViewMatrix.m);
+	// drawModelInstanced(octagon, instancingProgram, nrInstances, t, transCubes);
+
+	// // Draw ground
+	// drawGround(groundTransform);
+
+	// Draw shadow map
+	glDisable(GL_CULL_FACE);
+	useFBO(0L, getShadowMapFBO(), 0L);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glUseProgram(plainTextureProgram);
+	glUniform1i(glGetUniformLocation(plainTextureProgram, "image"), 0);
+	DrawModel(square, plainTextureProgram, "in_Position", NULL, "in_TexCoord");
+	glEnable(GL_CULL_FACE);
 
 	if (VERBOSE) {
 		printf("%f\n", t - lastT);
