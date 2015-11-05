@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <math.h>
 
 #include "./libraries/GLUtilities.h"
@@ -59,7 +60,6 @@ struct Camera moveCameraOnKeyboard(struct Camera c) {
 		c.position.y -= 0.1;
 		c.target.y -= 0.1;
 	}
-
 	printError("moveonkeyinputrelativecamera()");
 	return c;
 }
@@ -97,6 +97,6 @@ vec3 cameraDirection(struct Camera c) {
 
 struct Camera createUserCamera(vec3 position, vec3 normal, vec3 target, float viewAngle) {
 	struct Camera c = (struct Camera) {position, normal, target,
-											 perspective(viewAngle, (GLfloat)glutGet(GLUT_WINDOW_X)/(GLfloat)glutGet(GLUT_WINDOW_Y), 0.1, 1000)};
+											 perspective(viewAngle, (GLfloat)glutGet(GLUT_WINDOW_X)/(GLfloat)glutGet(GLUT_WINDOW_Y), 10, 4000)};
 	return c;
 }

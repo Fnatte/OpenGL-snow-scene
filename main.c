@@ -1,11 +1,14 @@
-#include <math.h>
 #include <GL/glew.h>
 #include <GL/glut.h>
 
-#include "./libraries/GLUtilities.h"
-#include "./libraries/LoadObject.h"
-#include "./libraries/LoadTGA.h"
-#include "./libraries/VectorUtils3.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+
+#include "libraries/LoadTGA.h"
+#include "libraries/VectorUtils3.h"
+#include "libraries/GLUtilities.h"
+#include "libraries/LoadObject.h"
 
 #include "main.h"
 #include "instancing.h"
@@ -13,176 +16,238 @@
 #include "camera.h"
 #include "shadow.h"
 
-#define VERBOSE 0
-
-
-unsigned int vertexArrayObjID;
-GLuint program;
-GLuint skyboxProgram;
-GLuint instancingProgram;
-GLuint groundProgram;
-GLuint plainTextureProgram;
-GLuint depthProgram;
-
-Model *octagon;
-Model *skybox;
-Model *plane;
-Model *square;
-mat4 transCubes;
-mat4 transGround;
-
-GLuint skyTexture;
-
-GLfloat lastT = 0;
-
-int nrInstances = 20;
 
 struct Camera userCamera;
 
-GLfloat squareData[] = {
-	-1,-1,0,
-	-1,1, 0,
-	1,1, 0,
-	1,-1, 0};
-GLfloat squareTexCoord[] = {
-	0, 0,
-	0, 1,
-	1, 1,
-	1, 0};
-GLuint squareIndices[] = {0, 1, 2, 0, 2, 3};
+#define RENDER_WIDTH 640.0
+#define RENDER_HEIGHT 480.0
+
+// We assign one texture unit in which to store the transformation.
+#define TEX_UNIT 0
+
+#define NEAR 1.0
+#define FAR 100.0
+#define W 600
+#define H 600
+
+//Camera position
+Point3D p_camera = {32,20,0};
+
+//Camera lookAt
+Point3D l_camera = {2,0,-10};
+
+//Light mouvement circle radius
+float light_mvnt = 40.0f; // At 30 we get edge artifacts
+
+//Light position
+Point3D p_light = {40,20,0};
+
+//Light lookAt
+//Point3D l_light = {0,3,-5};
+Point3D l_light = {0,3,-10};
+
+// Use to activate/disable projTexShader
+GLuint fullProgram, plainProgram, instancingProgram;
+GLuint projTexMapUniform;
+
+FBOstruct *fbo;
+
+//-----------------------------matrices------------------------------
+mat4	modelViewMatrix, textureMatrix;
+mat4 projectionMatrix;
+
+mat4 transCubes;
+
+// Arrays for ground and the Model references
+GLfloat groundcolor[] = {0.3f,0.3f,0.3f,1};
+GLfloat ground[] = {
+	-35,2,-35,
+	-35,2, 15,
+	15,2, 15,
+	15,2,-35
+};
+GLuint groundIndices[] = {0, 1, 2, 0, 2, 3};
+Model *groundModel, *torusModel, *sphereModel;
 
 
-void init(void) {
-	printError ("before init()");
-	dumpInfo();
+void initUserCamera() {
+	vec3 position = (vec3){1.5f, 20.0f, -50.0f};
+	vec3 normal = (vec3){0.0f, 1.0f, 0.0f};
+	vec3 target = (vec3){10.0f, 15.0f, 5.0f};
+	userCamera = createUserCamera(position, normal, target, 90.0);
+}
 
-	userCamera = createUserCamera((vec3){1.5f, 20.0f, -50.0f}, (vec3){0.0f, 1.0f, 0.0f}, (vec3){10.0f, 15.0f, 5.0f}, 90.0);
-
-	octagon = LoadModelPlus("./models/octagon.obj");
-	skybox = LoadModelPlus("./models/skybox.obj");
-	plane = LoadModelPlus("./models/plane2.obj");
-	square = LoadDataToModel(squareData, NULL, squareTexCoord, NULL, squareIndices, 4, 6);
-
-	transGround = T(0, 0, 0);
-	transCubes = T(-10, 100, -10);
-
-	LoadTGATextureSimple("./textures/SkyBox512.tga", &skyTexture);
-
-	printError("GL inits");
-	glClearColor(0.0, 0.0, 0.0, 0);
-	glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_BLEND);
-	glEnable(GL_CULL_FACE);
-
-	// Load and compile shader
-	skyboxProgram = loadShaders("./shaders/skybox.vert", "./shaders/skybox.frag");
+void loadShadowShader() {
+	fullProgram = loadShaders("shaders/full.vert", "shaders/full.frag");
+	projTexMapUniform = glGetUniformLocation(fullProgram,"textureUnit");
+	plainProgram = loadShaders("shaders/plain.vert", "shaders/plain.frag");
 	instancingProgram = loadShaders("./shaders/instancing.vert", "./shaders/instancing.frag");
-	groundProgram = loadShaders("./shaders/ground.vert", "./shaders/ground.frag");
-	plainTextureProgram = loadShaders("./shaders/plainTexture.vert", "./shaders/plainTexture.frag");
-	depthProgram = loadShaders("./shaders/depth.vert", "./shaders/depth.frag");
-
-	glUseProgram(skyboxProgram);
-	glActiveTexture(GL_TEXTURE0);
-	glUniform1i(glGetUniformLocation(skyboxProgram, "texUnit"), 0);
-
-	glUseProgram(instancingProgram);
-	glUniform1i(glGetUniformLocation(instancingProgram, "texUnit"), 0);
-	setupInstancedVertexAttributes(instancingProgram, nrInstances);
-
-	glUseProgram(groundProgram);
-	glUniform1i(glGetUniformLocation(groundProgram, "texUnit"), 0);
-	initializeGround(plane, groundProgram);
-
-	initShadowMap();
-
-	printError("init(): End");
 }
 
-void OnTimer(int value) {
-	glutPostRedisplay();
-	glutTimerFunc(16, &OnTimer, value);
-	printError("OnTimer()");
+
+// This update only change the position of the light.
+void updatePositions(void) {
+	p_light.x = light_mvnt * cos(glutGet(GLUT_ELAPSED_TIME)/1000.0);
+	p_light.z = light_mvnt * sin(glutGet(GLUT_ELAPSED_TIME)/1000.0);
 }
 
-void display(void) {
-	printError("pre display");
+
+// Build the transformation sequence for the light source path,
+// by copying from the ordinary camera matrices.
+void setTextureMatrix(void)
+{
+	mat4 scaleBiasMatrix;
+
+	IdentityMatrix(textureMatrix);
+
+	// Scale and bias transform, moving from unit cube [-1,1] to [0,1]
+	scaleBiasMatrix = Mult(T(0.5, 0.5, 0.0), S(0.5, 0.5, 1.0));
+	textureMatrix = Mult(Mult(scaleBiasMatrix, projectionMatrix), modelViewMatrix);
+	// Multiply modelview and transformation matrices
+}
+
+
+void loadObjects(void) {
+	// The shader must be loaded before this is called!
+	if (fullProgram == 0)
+		printf("Warning! Is the shader not loaded?\n");
+	groundModel = LoadDataToModel(ground,	NULL,	NULL,	NULL,	groundIndices, 4,	6);
+	torusModel = LoadModelPlus("models/torus.obj");
+	sphereModel = LoadModelPlus("models/sphere.obj");
+	transCubes = T(-10, 100, -10);
+}
+
+void drawObjects() {
+  mat4 mv2, tx2, trans;
+
+	glUniformMatrix4fv(glGetUniformLocation(fullProgram, "projectionMatrix"), 1, GL_TRUE, projectionMatrix.m);
+
+	// Ground
+	glUniform1f(glGetUniformLocation(fullProgram, "shade"), 0.3); // Dark ground
+	glUniformMatrix4fv(glGetUniformLocation(fullProgram, "modelViewMatrix"), 1, GL_TRUE, modelViewMatrix.m);
+	glUniformMatrix4fv(glGetUniformLocation(fullProgram, "textureMatrix"), 1, GL_TRUE, textureMatrix.m);
+	DrawModel(groundModel, fullProgram, "in_Position", NULL, NULL);
+
+	glUniform1f(glGetUniformLocation(fullProgram, "shade"), 0.9); // Brighter objects
+
+	// One torus
+	trans = Mult(T(0,4,-16), S(2.0, 2.0, 2.0)); // Apply on both
+	mv2 = Mult(modelViewMatrix, trans); // Apply on both
+	tx2 = Mult(textureMatrix, trans);
+	// Upload both!
+	glUniformMatrix4fv(glGetUniformLocation(fullProgram, "modelViewMatrix"), 1, GL_TRUE, mv2.m);
+	glUniformMatrix4fv(glGetUniformLocation(fullProgram, "textureMatrix"), 1, GL_TRUE, tx2.m);
+	DrawModel(torusModel, fullProgram, "in_Position", NULL, NULL);
+
+	// The other torus
+	trans = Mult(Mult(T(0,4,-16), Ry(3.14/2)), S(2.0, 2.0, 2.0)); // Apply on both
+	mv2 = Mult(modelViewMatrix, trans);
+	tx2 = Mult(textureMatrix, trans);
+	// Upload both!
+	glUniformMatrix4fv(glGetUniformLocation(fullProgram, "modelViewMatrix"), 1, GL_TRUE, mv2.m);
+	glUniformMatrix4fv(glGetUniformLocation(fullProgram, "textureMatrix"), 1, GL_TRUE, tx2.m);
+	DrawModel(torusModel, fullProgram, "in_Position", NULL, NULL);
+
+	// The sphere
+	trans = Mult(T(0,4,-5), S(5.0, 5.0, 5.0));
+	trans = Mult(T(0,4,-4), S(5.0, 5.0, 5.0));
+	mv2 = Mult(modelViewMatrix, trans); // Apply on both
+	tx2 = Mult(textureMatrix, trans);
+	// Upload both!
+	glUniformMatrix4fv(glGetUniformLocation(fullProgram, "modelViewMatrix"), 1, GL_TRUE, mv2.m);
+	glUniformMatrix4fv(glGetUniformLocation(fullProgram, "textureMatrix"), 1, GL_TRUE, tx2.m);
+	DrawModel(sphereModel, fullProgram, "in_Position", NULL, NULL);
+}
+
+void renderScene(void) {
+	userCamera = moveCameraOnKeyboard(userCamera);
 	mat4 projectionViewMatrix = getProjectionViewMatrix(userCamera);
+	// Change light positions
+	updatePositions();
 
-	GLfloat t = (GLfloat)glutGet(GLUT_ELAPSED_TIME) / 1000;
+	// Setup projection matrix
+	projectionMatrix = perspective(45, RENDER_WIDTH/RENDER_HEIGHT, 10, 4000);
 
-	mat4 groundTransform = Mult(projectionViewMatrix, transGround);
+	// Setup the modelview from the light source
+	modelViewMatrix = lookAt(p_light.x, p_light.y, p_light.z,
+													 l_light.x, l_light.y, l_light.z, 0,1,0);
+	// Using the result from lookAt, add a bias to position the result properly in texture space
+	setTextureMatrix();
 
-	beginRenderShadowMap();
-	glUseProgram(instancingProgram);
-	glUniformMatrix4fv(glGetUniformLocation(instancingProgram, "projectionViewMatrix"), 1, GL_TRUE, projectionViewMatrix.m);
-	drawModelInstanced(octagon, instancingProgram, nrInstances, t, transCubes);
-	// glUseProgram(depthProgram);
-	// glUniformMatrix4fv(glGetUniformLocation(program, "projectionViewWorldTransform"), 1, GL_TRUE, groundTransform.m);
-	// drawGroundWithProgram(depthProgram);
-	drawGround(groundTransform);
-	endRenderShadowMap();
-
-	// useFBO(0L, 0L, 0L);
-	// glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	// Draw skybox
-	// glUseProgram(skyboxProgram);
-	// glUniformMatrix4fv(glGetUniformLocation(skyboxProgram, "projectionViewMatrix"), 1, GL_TRUE, projectionViewMatrix.m);
-	// glBindTexture(GL_TEXTURE_2D, skyTexture);
-	// glDisable(GL_DEPTH_TEST);
-	// glDisable(GL_CULL_FACE);
-	// mat4 cameraTrans = T(userCamera.position.x, userCamera.position.y, userCamera.position.z);
-	// glUniformMatrix4fv(glGetUniformLocation(skyboxProgram, "transform"), 1, GL_TRUE, cameraTrans.m);
-	// DrawModel(skybox, skyboxProgram, "in_Position", NULL, "in_TexCoord");
-	// glEnable(GL_CULL_FACE);
-	// glEnable(GL_DEPTH_TEST);
-
-	// // Draw instances
-	// glUseProgram(instancingProgram);
-	// glUniformMatrix4fv(glGetUniformLocation(instancingProgram, "projectionViewMatrix"), 1, GL_TRUE, projectionViewMatrix.m);
-	// drawModelInstanced(octagon, instancingProgram, nrInstances, t, transCubes);
-
-	// // Draw ground
-	// drawGround(groundTransform);
-
-	// Draw shadow map
-	glDisable(GL_CULL_FACE);
-	useFBO(0L, getShadowMapFBO(), 0L);
+	// 1. Render scene to FBO
+	useFBO(fbo, NULL, NULL);
+	glViewport(0,0,RENDER_WIDTH,RENDER_HEIGHT);
+	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE); // Depth only
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glUseProgram(plainTextureProgram);
-	glUniform1i(glGetUniformLocation(plainTextureProgram, "image"), 0);
-	DrawModel(square, plainTextureProgram, "in_Position", NULL, "in_TexCoord");
-	glEnable(GL_CULL_FACE);
 
-	if (VERBOSE) {
-		printf("%f\n", t - lastT);
-	}
+	//Using the simple shader
+	glUseProgram(fullProgram);
+	glUniform1i(projTexMapUniform,TEX_UNIT);
+	glActiveTexture(GL_TEXTURE0 + TEX_UNIT);
+	glBindTexture(GL_TEXTURE_2D,0);
 
-	lastT = t;
+	drawObjects();
+
+	mat4 trans = Mult(T(0,4,-16), S(2.0, 2.0, 2.0)); // Apply on both
+	projectionViewMatrix = Mult(projectionMatrix, trans);
+	drawModelInstanced(sphereModel, instancingProgram, transCubes, projectionViewMatrix);
+	glFlush();
+
+	//2. Render from camera.
+	// Now rendering from the camera POV
+
+	useFBO(NULL, fbo, NULL);
+
+	glViewport(0,0,RENDER_WIDTH,RENDER_HEIGHT);
+
+	//Enabling color write (previously disabled for light POV z-buffer rendering)
+	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+
+	// Clear previous frame values
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	//Using the projTex shader
+	glUseProgram(fullProgram);
+	glUniform1i(projTexMapUniform,TEX_UNIT);
+	glActiveTexture(GL_TEXTURE0 + TEX_UNIT);
+	glBindTexture(GL_TEXTURE_2D,fbo->depth);
+
+
+	// Setup the modelview from the camera
+	modelViewMatrix = lookAtv(userCamera.position, userCamera.target, userCamera.normal);
+
+	glCullFace(GL_BACK);
+	drawObjects();
+
+	trans = Mult(T(0,4,-16), S(2.0, 2.0, 2.0)); // Apply on both
+	projectionViewMatrix = Mult(projectionMatrix, trans);
+	drawModelInstanced(sphereModel, instancingProgram, transCubes, projectionViewMatrix);
+
 	glutSwapBuffers();
 }
 
-
-void drawObject(mat4 transform, Model* model, GLuint p) {
-	glUniformMatrix4fv(glGetUniformLocation(p, "transform"), 1, GL_TRUE, transform.m);
-	DrawModel(model, p, "in_Position", "in_Normal", "in_TexCoord");
-	printError("drawObject()");
-}
-
-void reshapeViewport(GLsizei w, GLsizei h) {
-	glViewport(0, 0, w, h);
-	userCamera.projection = perspective(90, (GLfloat)w/(GLfloat)h, 0.1, 1000);
-}
 
 void handleMouse(int x, int y) {
 	userCamera = rotateCameraByMouse(userCamera, x, y);
 }
 
-int main(int argc, char *argv[]) {
-	glutInitContextVersion(3, 2);
+
+void onTimer(int value) {
+	glutPostRedisplay();
+	glutTimerFunc(16, &onTimer, value);
+	printError("OnTimer()");
+}
+
+
+int main(int argc, char** argv) {
 	glutInit(&argc, argv);
-	glutCreateWindow ("Let it snow");
+	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
+	glutInitWindowPosition(100,100);
+	glutInitWindowSize(RENDER_WIDTH,RENDER_HEIGHT);
+	glutInitContextVersion(3, 1);
+	glutCreateWindow("Shadow mapping demo");
+	glutPassiveMotionFunc(handleMouse);
+
 	glewExperimental = GL_TRUE;
 	GLenum err = glewInit();
 	// https://www.opengl.org/wiki/OpenGL_Loading_Library#GLEW_.28OpenGL_Extension_Wrangler.29
@@ -190,12 +255,22 @@ int main(int argc, char *argv[]) {
 	if (GLEW_OK != err) {
 		fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
 	}
-	fprintf(stdout, "Status: Using GLEW %s\n", glewGetString(GLEW_VERSION));
-	glutDisplayFunc(display);
-	glutReshapeFunc(reshapeViewport);
+
+	dumpInfo();
+
+	loadShadowShader();
+	loadObjects();
+	initUserCamera();
 	initKeymapManager();
-	glutPassiveMotionFunc(handleMouse);
-	init ();
-	glutTimerFunc(16, &OnTimer, 0);
+	setupInstancedVertexAttributes(instancingProgram, 10);
+	fbo = initFBO2(RENDER_WIDTH,RENDER_HEIGHT, 0, 1);
+
+	glEnable(GL_DEPTH_TEST);
+	glClearColor(0,0,0,1.0f);
+	glEnable(GL_CULL_FACE);
+
+	glutDisplayFunc(renderScene);
+	glutTimerFunc(16, &onTimer, 0);
+
 	glutMainLoop();
 }

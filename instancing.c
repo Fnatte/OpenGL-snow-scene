@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <GL/glew.h>
+#include <GL/glut.h>
 
 #include "./libraries/GLUtilities.h"
 #include "./libraries/LoadObject.h"
@@ -22,8 +23,11 @@ GLuint matrixLoc   = 4;
 
 float* randoms;
 
+GLuint count;
 
-void setupInstancedVertexAttributes(GLuint prog, int count) {
+
+void setupInstancedVertexAttributes(GLuint prog, int _count) {
+	count = _count;
 	glUseProgram(prog);
 	glGenBuffers(1, &instanceTransBuffer);
 	glGenBuffers(1, &testBuffer);
@@ -31,12 +35,18 @@ void setupInstancedVertexAttributes(GLuint prog, int count) {
 	randoms = getRandFloatArray(count * count * count, 1.0, 4.0);
 }
 
-void drawModelInstanced(Model *m, GLuint program, GLuint count, GLfloat time, mat4 transEverything) {
+
+void drawModelInstanced(Model *m, GLuint program, mat4 transEverything, mat4 projectionViewMatrix) {
 	glUseProgram(program);
+	glUniformMatrix4fv(glGetUniformLocation(program, "projectionViewMatrix"), 1, GL_TRUE, projectionViewMatrix.m);
+
+	GLfloat time = glutGet(GLUT_ELAPSED_TIME) / 1000.0;
+
 	if (m != NULL)
 		glBindVertexArray(m->vao);
 	else {
 		printf("Warning warning, fuckup in drawmodelinstanced");
+		printError("drawModelInstanced()");
 		return;
 	}
 
