@@ -17,25 +17,20 @@
 #include "shadow.h"
 
 
-struct Camera userCamera;
-struct Camera lightSource;
-
 #define TEX_UNIT 0
 #define FBO_RES 2048
 
-Point3D p_light = {40,20,0};
-Point3D l_light = {0,3,-10};
 
-// Use to activate/disable projTexShader
+struct Camera userCamera;
+struct Camera pointLight;
+
 GLuint fullProgram, plainProgram, instancingProgram;
 GLuint projTexMapUniform;
 
 FBOstruct *fbo;
 
-//-----------------------------matrices------------------------------
-mat4	modelViewMatrix, textureMatrix;
+mat4 modelViewMatrix, textureMatrix;
 mat4 projectionMatrix;
-
 mat4 transCubes;
 
 // Arrays for ground and the Model references
@@ -63,8 +58,11 @@ void initUserCamera() {
 }
 
 
-void initLightSource() {
-
+void initpointLight() {
+	vec3 position = (vec3){40, 20, 0};
+	vec3 target = (vec3){0, 3, -10};
+	vec3 normal = CrossProduct(position, target);
+	pointLight = createUserCamera(position, normal, target, 90.0);
 }
 
 
@@ -77,8 +75,8 @@ void loadShadowShader() {
 
 
 void rotateLight(void) {
-	p_light.x = 30.0 * -cos(glutGet(GLUT_ELAPSED_TIME)/10000.0);
-	p_light.z = 30.0 * -sin(glutGet(GLUT_ELAPSED_TIME)/10000.0);
+	pointLight.position.x = 30.0 * -cos(glutGet(GLUT_ELAPSED_TIME)/10000.0);
+	pointLight.position.z = 30.0 * -sin(glutGet(GLUT_ELAPSED_TIME)/10000.0);
 }
 
 
@@ -130,8 +128,7 @@ void renderScene(void) {
 	mat4 projectionViewMatrix = getProjectionViewMatrix(userCamera);
 
 	// Setup the modelview from the light source
-	modelViewMatrix = lookAt(p_light.x, p_light.y, p_light.z,
-													 l_light.x, l_light.y, l_light.z, 0,1,0);
+	modelViewMatrix = lookAtv(pointLight.position, pointLight.target, pointLight.normal);
 	// Using the result from lookAt, add a bias to position the result properly in texture space
 	setTextureMatrix();
 
@@ -209,6 +206,7 @@ int main(int argc, char** argv) {
 	loadShadowShader();
 	loadObjects();
 	initUserCamera();
+	initpointLight();
 	initKeymapManager();
 	setupInstancedVertexAttributes(instancingProgram, 10);
 	fbo = initFBO2(FBO_RES, FBO_RES, 0, 1);
