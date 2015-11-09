@@ -1,12 +1,9 @@
 #version 150
 
-// Projected texture demo
-// Based on a demo by Fabien Sanglard, http://www.fabiensanglard.net/shadowmapping/index.php
-
-uniform sampler2D textureUnit;
 in vec4 lightSourceCoord;
-out vec4 out_Color;
+uniform sampler2D textureUnit;
 uniform float shade;
+out vec4 out_Color;
 
 void main()
 {
