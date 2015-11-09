@@ -88,7 +88,7 @@ void drawObjects(GLuint program, mat4 modelViewProjectionTransform, mat4 shadowM
 		glUniform1f(glGetUniformLocation(program, "shade"), 0.3);
 		glUniformMatrix4fv(glGetUniformLocation(program, "shadowMapTransform"), 1, GL_TRUE, shadowMapTransform.m);
 	}
-	glUniformMatrix4fv(glGetUniformLocation(program, "modelViewProjectionTransfrom"), 1, GL_TRUE, modelViewProjectionTransform.m);
+	glUniformMatrix4fv(glGetUniformLocation(program, "modelViewProjectionTransform"), 1, GL_TRUE, modelViewProjectionTransform.m);
 	drawGroundWithProgram(program);
 
 	// The cube
@@ -101,8 +101,8 @@ void drawObjects(GLuint program, mat4 modelViewProjectionTransform, mat4 shadowM
 		glUniform1f(glGetUniformLocation(program, "shade"), 0.9);
 		glUniformMatrix4fv(glGetUniformLocation(program, "shadowMapTransform"), 1, GL_TRUE, tx2.m);
 	}
-		glUniformMatrix4fv(glGetUniformLocation(program, "modelViewProjectionTransfrom"), 1, GL_TRUE, mv2.m);
-	DrawModel(modelCube, program, "in_Position", NULL, NULL);
+		glUniformMatrix4fv(glGetUniformLocation(program, "modelViewProjectionTransform"), 1, GL_TRUE, mv2.m);
+	DrawModel(modelCube, program, "inPosition", NULL, NULL);
 }
 
 void drawSkybox(mat4 transform) {
