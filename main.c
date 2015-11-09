@@ -33,16 +33,7 @@ mat4 modelViewMatrix, textureMatrix;
 mat4 projectionMatrix;
 mat4 transCubes;
 
-// Arrays for ground and the Model references
-GLfloat groundcolor[] = {0.3f,0.3f,0.3f,1};
-GLfloat ground[] = {
-	-35,2,-35,
-	-35,2, 15,
-	15,2, 15,
-	15,2,-35
-};
-GLuint groundIndices[] = {0, 1, 2, 0, 2, 3};
-Model *groundModel, *cubeModel, *planeModel;
+Model *cubeModel, *planeModel;
 
 
 void reshapeViewport(GLsizei w, GLsizei h) {
@@ -93,7 +84,6 @@ void loadObjects(void) {
 	// The shader must be loaded before this is called!
 	if (fullProgram == 0)
 		printf("Warning! Is the shader not loaded?\n");
-	groundModel = LoadDataToModel(ground,	NULL,	NULL,	NULL,	groundIndices, 4,	6);
 	cubeModel = LoadModelPlus("./models/octagon.obj");
 	planeModel = LoadModelPlus("./models/plane.obj");
 	transCubes = T(-10, 100, -10);
