@@ -47,7 +47,8 @@ void initpointLight() {
 	vec3 position = (vec3){40, 20, 0};
 	vec3 target = (vec3){0, 3, -10};
 	vec3 normal = CrossProduct(position, target);
-	pointLight = createUserCamera(position, normal, target, 90.0);
+	pointLight = (struct Camera)
+		{ position, normal, target, perspective(90.0, 1.0 , 10, 4000) };
 }
 
 
