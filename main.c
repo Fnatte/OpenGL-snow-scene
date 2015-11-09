@@ -15,7 +15,7 @@
 #include "ground.h"
 #include "camera.h"
 #include "shadow.h"
-
+#include "content.h"
 
 struct Camera userCamera;
 struct Camera lightSource;
@@ -40,14 +40,6 @@ mat4 transCubes;
 
 // Arrays for ground and the Model references
 GLfloat groundcolor[] = {0.3f,0.3f,0.3f,1};
-GLfloat ground[] = {
-	-35,2,-35,
-	-35,2, 15,
-	15,2, 15,
-	15,2,-35
-};
-GLuint groundIndices[] = {0, 1, 2, 0, 2, 3};
-Model *groundModel, *cubeModel, *planeModel;
 
 
 void reshapeViewport(GLsizei w, GLsizei h) {
@@ -92,12 +84,6 @@ void setTextureMatrix(void) {
 
 
 void loadObjects(void) {
-	// The shader must be loaded before this is called!
-	if (fullProgram == 0)
-		printf("Warning! Is the shader not loaded?\n");
-	groundModel = LoadDataToModel(ground,	NULL,	NULL,	NULL,	groundIndices, 4,	6);
-	cubeModel = LoadModelPlus("./models/octagon.obj");
-	planeModel = LoadModelPlus("./models/plane.obj");
 	transCubes = T(-10, 100, -10);
 }
 
@@ -121,7 +107,7 @@ void drawObjects() {
 	// Upload both!
 	glUniformMatrix4fv(glGetUniformLocation(fullProgram, "modelViewMatrix"), 1, GL_TRUE, mv2.m);
 	glUniformMatrix4fv(glGetUniformLocation(fullProgram, "textureMatrix"), 1, GL_TRUE, tx2.m);
-	DrawModel(cubeModel, fullProgram, "in_Position", NULL, NULL);
+	DrawModel(modelCube, fullProgram, "in_Position", NULL, NULL);
 }
 
 void renderScene(void) {
@@ -150,7 +136,7 @@ void renderScene(void) {
 
 	mat4 trans = Mult(T(0,4,-16), S(2.0, 2.0, 2.0)); // Apply on both
 	projectionViewMatrix = Mult(userCamera.projection, trans);
-	drawModelInstanced(cubeModel, instancingProgram, transCubes, projectionViewMatrix);
+	drawModelInstanced(modelCube, instancingProgram, transCubes, projectionViewMatrix);
 	glFlush();
 
 	//2. Render from camera.
@@ -170,7 +156,7 @@ void renderScene(void) {
 
 	trans = Mult(T(0,4,-5), S(5.0, 5.0, 5.0));
 	projectionViewMatrix = getProjectionViewMatrix(userCamera);
-	drawModelInstanced(cubeModel, instancingProgram, transCubes, projectionViewMatrix);
+	drawModelInstanced(modelCube, instancingProgram, transCubes, projectionViewMatrix);
 
 	glutSwapBuffers();
 }
@@ -207,12 +193,13 @@ int main(int argc, char** argv) {
 	dumpInfo();
 
 	loadShadowShader();
+	loadContent();
 	loadObjects();
 	initUserCamera();
 	initKeymapManager();
 	setupInstancedVertexAttributes(instancingProgram, 10);
 	fbo = initFBO2(FBO_RES, FBO_RES, 0, 1);
-	initializeGround(planeModel, fullProgram);
+	initializeGround(modelPlane, fullProgram);
 
 	glEnable(GL_DEPTH_TEST);
 	glClearColor(0,0,0,1.0f);
