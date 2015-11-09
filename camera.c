@@ -96,7 +96,8 @@ vec3 cameraDirection(struct Camera c) {
 
 
 struct Camera createUserCamera(vec3 position, vec3 normal, vec3 target, float viewAngle) {
-	struct Camera c = (struct Camera) {position, normal, target,
-											 perspective(viewAngle, (GLfloat)glutGet(GLUT_WINDOW_X)/(GLfloat)glutGet(GLUT_WINDOW_Y), 10, 4000)};
+	struct Camera c = (struct Camera)
+		{ position, normal, target,
+			perspective(viewAngle, (GLfloat)glutGet(GLUT_WINDOW_X)/(GLfloat)glutGet(GLUT_WINDOW_Y), 10, 4000) };
 	return c;
 }
