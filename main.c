@@ -29,8 +29,6 @@ GLuint projTexMapUniform;
 
 FBOstruct *fbo;
 
-mat4 modelViewMatrix, textureMatrix;
-mat4 projectionMatrix;
 mat4 transCubes;
 
 void reshapeViewport(GLsizei w, GLsizei h) {
@@ -72,13 +70,10 @@ void rotateLight(void) {
 	pointLight.position.z = 30.0 * -sin(glutGet(GLUT_ELAPSED_TIME)/10000.0);
 }
 
-
-// Build the transformation sequence for the light source path,
-// by copying from the ordinary camera matrices.
-void setTextureMatrix(void) {
+mat4 getShadowMapTransform(mat4 modelViewProjectionTransform) {
 	// Scale and bias transform, moving from unit cube [-1,1] to [0,1]
 	mat4 scaleBiasMatrix = Mult(T(0.5, 0.5, 0.0), S(0.5, 0.5, 1.0));
-	textureMatrix = Mult(Mult(scaleBiasMatrix, userCamera.projection), modelViewMatrix);
+	return Mult(scaleBiasMatrix, modelViewProjectionTransform);
 }
 
 
@@ -86,73 +81,37 @@ void loadObjects(void) {
 	transCubes = T(-10, 100, -10);
 }
 
-void drawObjects() {
+void drawObjects(GLuint program, mat4 modelViewProjectionTransform, mat4 shadowMapTransform) {
   mat4 mv2, tx2, trans;
-
-	glUniformMatrix4fv(glGetUniformLocation(fullProgram, "projectionMatrix"), 1, GL_TRUE, userCamera.projection.m);
-
+	glUseProgram(program);
 	// Ground
-	glUniform1f(glGetUniformLocation(fullProgram, "shade"), 0.3); // Dark ground
-	glUniformMatrix4fv(glGetUniformLocation(fullProgram, "modelViewMatrix"), 1, GL_TRUE, modelViewMatrix.m);
-	glUniformMatrix4fv(glGetUniformLocation(fullProgram, "textureMatrix"), 1, GL_TRUE, textureMatrix.m);
-	drawGroundWithProgram(fullProgram);
+	if (program == fullProgram) {
+		// Dark ground
+		glUniform1f(glGetUniformLocation(program, "shade"), 0.3);
+		glUniformMatrix4fv(glGetUniformLocation(program, "shadowMapTransform"), 1, GL_TRUE, shadowMapTransform.m);
+	}
+	glUniformMatrix4fv(glGetUniformLocation(program, "modelViewProjectionTransfrom"), 1, GL_TRUE, modelViewProjectionTransform.m);
+	drawGroundWithProgram(program);
 
-	glUniform1f(glGetUniformLocation(fullProgram, "shade"), 0.9); // Brighter objects
-
-	// The sphere
+	// The cube
 	trans = Mult(T(0,4,-5), S(5.0, 5.0, 5.0));
-	mv2 = Mult(modelViewMatrix, trans); // Apply on both
-	tx2 = Mult(textureMatrix, trans);
+	mv2 = Mult(modelViewProjectionTransform, trans); // Apply on both
+	tx2 = Mult(shadowMapTransform, trans);
 	// Upload both!
-	glUniformMatrix4fv(glGetUniformLocation(fullProgram, "modelViewMatrix"), 1, GL_TRUE, mv2.m);
-	glUniformMatrix4fv(glGetUniformLocation(fullProgram, "textureMatrix"), 1, GL_TRUE, tx2.m);
-	DrawModel(modelCube, fullProgram, "in_Position", NULL, NULL);
+	if (program == fullProgram) {
+		// Brighter objects
+		glUniform1f(glGetUniformLocation(program, "shade"), 0.9);
+		glUniformMatrix4fv(glGetUniformLocation(program, "shadowMapTransform"), 1, GL_TRUE, tx2.m);
+	}
+		glUniformMatrix4fv(glGetUniformLocation(program, "modelViewProjectionTransfrom"), 1, GL_TRUE, mv2.m);
+	DrawModel(modelCube, program, "in_Position", NULL, NULL);
 }
 
-void renderScene(void) {
-	rotateLight();
-	userCamera = moveCameraOnKeyboard(userCamera);
+void drawSkybox(mat4 transform) {
+	mat4 cameraTrans = T(userCamera.position.x, userCamera.position.y, userCamera.position.z); 
 
-	mat4 projectionViewMatrix, cameraTrans;
-
-	// Setup the modelview from the light source
-	modelViewMatrix = lookAtv(pointLight.position, pointLight.target, pointLight.normal);
-	// Using the result from lookAt, add a bias to position the result properly in texture space
-	setTextureMatrix();
-
-	mat4 trans = Mult(T(0,4,-16), S(2.0, 2.0, 2.0)); // Apply on both
-	projectionViewMatrix = Mult(userCamera.projection, trans);
-
-
-	// 1. Render scene to FBO
-	useFBO(fbo, NULL, NULL);
-	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE); // Depth only
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	//Using the simple shader
-	glUseProgram(plainProgram);
-	glUniform1i(projTexMapUniform,TEX_UNIT);
-	glActiveTexture(GL_TEXTURE0 + TEX_UNIT);
-	glBindTexture(GL_TEXTURE_2D,0);
-	drawObjects();
-	printError("Draw me like one of your french girls");
-
-	drawModelInstanced(modelCube, instancingProgram, transCubes, projectionViewMatrix);
-	glFlush();
-
-	//2. Render from camera.
-	modelViewMatrix = lookAtv(userCamera.position, userCamera.target, userCamera.normal);
-	projectionViewMatrix = getProjectionViewMatrix(userCamera);
-	cameraTrans = T(userCamera.position.x, userCamera.position.y, userCamera.position.z);
-
-	useFBO(NULL, fbo, NULL);
-	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glCullFace(GL_BACK);
-
-	// Draw skybox
 	glUseProgram(skyboxProgram);
-	glUniformMatrix4fv(glGetUniformLocation(skyboxProgram, "projectionViewMatrix"), 1, GL_TRUE, projectionViewMatrix.m);
+	glUniformMatrix4fv(glGetUniformLocation(skyboxProgram, "projectionViewMatrix"), 1, GL_TRUE, transform.m);
 	glBindTexture(GL_TEXTURE_2D, textureSkybox);
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
@@ -160,15 +119,49 @@ void renderScene(void) {
 	DrawModel(modelSkybox, skyboxProgram, "in_Position", NULL, "in_TexCoord");
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
+}
+
+void renderScene(void) {
+	rotateLight();
+	userCamera = moveCameraOnKeyboard(userCamera);
+
+	mat4 lightTransform = getProjectionViewMatrix(pointLight);
+	mat4 cameraTransform = getProjectionViewMatrix(userCamera);
+	mat4 shadowMapTransform = getShadowMapTransform(lightTransform);
+
+	// 1. Render scene to FBO
+	useFBO(fbo, NULL, NULL);
+	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE); // Depth only
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	glUseProgram(plainProgram);
+	// Using the simple shader
+	glUniform1i(projTexMapUniform,TEX_UNIT);
+	glActiveTexture(GL_TEXTURE0 + TEX_UNIT);
+	glBindTexture(GL_TEXTURE_2D,0);
+
+	drawObjects(plainProgram, lightTransform, shadowMapTransform);
+	drawModelInstanced(modelCube, instancingProgram, transCubes, lightTransform);
+	glFlush();
+	printError("Draw me like one of your french girls");
+
+	// 2. Render from camera.
+	useFBO(NULL, fbo, NULL);
+	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glCullFace(GL_BACK);
+
+	drawSkybox(cameraTransform);
 
 	glUseProgram(fullProgram);
 	glUniform1i(projTexMapUniform,TEX_UNIT);
 	glActiveTexture(GL_TEXTURE0 + TEX_UNIT);
 	glBindTexture(GL_TEXTURE_2D,fbo->depth);
 
-	drawObjects();
-
-	drawModelInstanced(modelCube, instancingProgram, transCubes, projectionViewMatrix);
+	glCullFace(GL_BACK);
+	drawObjects(fullProgram, cameraTransform, shadowMapTransform);
+	drawModelInstanced(modelCube, instancingProgram, transCubes, cameraTransform);
+	printError("Draw me like one of your italian girls");
 
 	glutSwapBuffers();
 }
