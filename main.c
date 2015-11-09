@@ -67,8 +67,13 @@ GLfloat ground[] = {
 	15,2,-35
 };
 GLuint groundIndices[] = {0, 1, 2, 0, 2, 3};
-Model *groundModel, *torusModel, *sphereModel;
+Model *groundModel, *cubeModel, *planeModel;
 
+
+void reshapeViewport(GLsizei w, GLsizei h) {
+	glViewport(0, 0, w, h);
+	userCamera.projection = perspective(90, (GLfloat)w/(GLfloat)h, 0.1, 1000);
+}
 
 void initUserCamera() {
 	vec3 position = (vec3){1.5f, 20.0f, -50.0f};
@@ -94,8 +99,7 @@ void updatePositions(void) {
 
 // Build the transformation sequence for the light source path,
 // by copying from the ordinary camera matrices.
-void setTextureMatrix(void)
-{
+void setTextureMatrix(void) {
 	mat4 scaleBiasMatrix;
 
 	IdentityMatrix(textureMatrix);
@@ -112,8 +116,8 @@ void loadObjects(void) {
 	if (fullProgram == 0)
 		printf("Warning! Is the shader not loaded?\n");
 	groundModel = LoadDataToModel(ground,	NULL,	NULL,	NULL,	groundIndices, 4,	6);
-	torusModel = LoadModelPlus("models/torus.obj");
-	sphereModel = LoadModelPlus("models/sphere.obj");
+	cubeModel = LoadModelPlus("models/octagon.obj");
+	planeModel = LoadModelPlus("./models/plane.obj");
 	transCubes = T(-10, 100, -10);
 }
 
@@ -126,48 +130,27 @@ void drawObjects() {
 	glUniform1f(glGetUniformLocation(fullProgram, "shade"), 0.3); // Dark ground
 	glUniformMatrix4fv(glGetUniformLocation(fullProgram, "modelViewMatrix"), 1, GL_TRUE, modelViewMatrix.m);
 	glUniformMatrix4fv(glGetUniformLocation(fullProgram, "textureMatrix"), 1, GL_TRUE, textureMatrix.m);
-	DrawModel(groundModel, fullProgram, "in_Position", NULL, NULL);
+	drawGroundWithProgram(fullProgram);
 
 	glUniform1f(glGetUniformLocation(fullProgram, "shade"), 0.9); // Brighter objects
 
-	// One torus
-	trans = Mult(T(0,4,-16), S(2.0, 2.0, 2.0)); // Apply on both
-	mv2 = Mult(modelViewMatrix, trans); // Apply on both
-	tx2 = Mult(textureMatrix, trans);
-	// Upload both!
-	glUniformMatrix4fv(glGetUniformLocation(fullProgram, "modelViewMatrix"), 1, GL_TRUE, mv2.m);
-	glUniformMatrix4fv(glGetUniformLocation(fullProgram, "textureMatrix"), 1, GL_TRUE, tx2.m);
-	DrawModel(torusModel, fullProgram, "in_Position", NULL, NULL);
-
-	// The other torus
-	trans = Mult(Mult(T(0,4,-16), Ry(3.14/2)), S(2.0, 2.0, 2.0)); // Apply on both
-	mv2 = Mult(modelViewMatrix, trans);
-	tx2 = Mult(textureMatrix, trans);
-	// Upload both!
-	glUniformMatrix4fv(glGetUniformLocation(fullProgram, "modelViewMatrix"), 1, GL_TRUE, mv2.m);
-	glUniformMatrix4fv(glGetUniformLocation(fullProgram, "textureMatrix"), 1, GL_TRUE, tx2.m);
-	DrawModel(torusModel, fullProgram, "in_Position", NULL, NULL);
-
 	// The sphere
 	trans = Mult(T(0,4,-5), S(5.0, 5.0, 5.0));
-	trans = Mult(T(0,4,-4), S(5.0, 5.0, 5.0));
 	mv2 = Mult(modelViewMatrix, trans); // Apply on both
 	tx2 = Mult(textureMatrix, trans);
 	// Upload both!
 	glUniformMatrix4fv(glGetUniformLocation(fullProgram, "modelViewMatrix"), 1, GL_TRUE, mv2.m);
 	glUniformMatrix4fv(glGetUniformLocation(fullProgram, "textureMatrix"), 1, GL_TRUE, tx2.m);
-	DrawModel(sphereModel, fullProgram, "in_Position", NULL, NULL);
+	DrawModel(cubeModel, fullProgram, "in_Position", NULL, NULL);
 }
 
 void renderScene(void) {
+	updatePositions();
 	userCamera = moveCameraOnKeyboard(userCamera);
 	mat4 projectionViewMatrix = getProjectionViewMatrix(userCamera);
-	// Change light positions
-	updatePositions();
 
 	// Setup projection matrix
-	projectionMatrix = perspective(45, RENDER_WIDTH/RENDER_HEIGHT, 10, 4000);
-
+	projectionMatrix = userCamera.projection;
 	// Setup the modelview from the light source
 	modelViewMatrix = lookAt(p_light.x, p_light.y, p_light.z,
 													 l_light.x, l_light.y, l_light.z, 0,1,0);
@@ -181,28 +164,25 @@ void renderScene(void) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	//Using the simple shader
-	glUseProgram(fullProgram);
+	glUseProgram(plainProgram);
 	glUniform1i(projTexMapUniform,TEX_UNIT);
 	glActiveTexture(GL_TEXTURE0 + TEX_UNIT);
 	glBindTexture(GL_TEXTURE_2D,0);
-
 	drawObjects();
+	printError("Draw me like one of your french girls");
 
 	mat4 trans = Mult(T(0,4,-16), S(2.0, 2.0, 2.0)); // Apply on both
 	projectionViewMatrix = Mult(projectionMatrix, trans);
-	drawModelInstanced(sphereModel, instancingProgram, transCubes, projectionViewMatrix);
+	drawModelInstanced(cubeModel, instancingProgram, transCubes, projectionViewMatrix);
 	glFlush();
 
 	//2. Render from camera.
 	// Now rendering from the camera POV
-
 	useFBO(NULL, fbo, NULL);
 
 	glViewport(0,0,RENDER_WIDTH,RENDER_HEIGHT);
-
 	//Enabling color write (previously disabled for light POV z-buffer rendering)
 	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-
 	// Clear previous frame values
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -219,9 +199,10 @@ void renderScene(void) {
 	glCullFace(GL_BACK);
 	drawObjects();
 
-	trans = Mult(T(0,4,-16), S(2.0, 2.0, 2.0)); // Apply on both
-	projectionViewMatrix = Mult(projectionMatrix, trans);
-	drawModelInstanced(sphereModel, instancingProgram, transCubes, projectionViewMatrix);
+
+	trans = Mult(T(0,4,-5), S(5.0, 5.0, 5.0));
+	projectionViewMatrix = getProjectionViewMatrix(userCamera);
+	drawModelInstanced(cubeModel, instancingProgram, transCubes, projectionViewMatrix);
 
 	glutSwapBuffers();
 }
@@ -247,6 +228,7 @@ int main(int argc, char** argv) {
 	glutInitContextVersion(3, 1);
 	glutCreateWindow("Shadow mapping demo");
 	glutPassiveMotionFunc(handleMouse);
+	glutReshapeFunc(reshapeViewport);
 
 	glewExperimental = GL_TRUE;
 	GLenum err = glewInit();
@@ -264,6 +246,7 @@ int main(int argc, char** argv) {
 	initKeymapManager();
 	setupInstancedVertexAttributes(instancingProgram, 10);
 	fbo = initFBO2(RENDER_WIDTH,RENDER_HEIGHT, 0, 1);
+	initializeGround(planeModel, fullProgram);
 
 	glEnable(GL_DEPTH_TEST);
 	glClearColor(0,0,0,1.0f);
