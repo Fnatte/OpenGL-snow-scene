@@ -24,7 +24,7 @@
 struct Camera userCamera;
 struct Camera pointLight;
 
-GLuint fullProgram, plainProgram, instancingProgram;
+GLuint fullProgram, plainProgram, instancingProgram, skyboxProgram;
 GLuint projTexMapUniform;
 
 FBOstruct *fbo;
@@ -54,11 +54,16 @@ void initpointLight() {
 }
 
 
-void loadShadowShader() {
+void initShaders() {
 	fullProgram = loadShaders("shaders/full.vert", "shaders/full.frag");
 	projTexMapUniform = glGetUniformLocation(fullProgram,"textureUnit");
 	plainProgram = loadShaders("shaders/plain.vert", "shaders/plain.frag");
 	instancingProgram = loadShaders("./shaders/instancing.vert", "./shaders/instancing.frag");
+	skyboxProgram = loadShaders("./shaders/skybox.vert", "./shaders/skybox.frag");
+
+	glUseProgram(skyboxProgram);
+	glActiveTexture(GL_TEXTURE0);
+	glUniform1i(glGetUniformLocation(skyboxProgram, "texUnit"), 0);
 }
 
 
@@ -107,12 +112,17 @@ void drawObjects() {
 void renderScene(void) {
 	rotateLight();
 	userCamera = moveCameraOnKeyboard(userCamera);
-	mat4 projectionViewMatrix = getProjectionViewMatrix(userCamera);
+
+	mat4 projectionViewMatrix, cameraTrans;
 
 	// Setup the modelview from the light source
 	modelViewMatrix = lookAtv(pointLight.position, pointLight.target, pointLight.normal);
 	// Using the result from lookAt, add a bias to position the result properly in texture space
 	setTextureMatrix();
+
+	mat4 trans = Mult(T(0,4,-16), S(2.0, 2.0, 2.0)); // Apply on both
+	projectionViewMatrix = Mult(userCamera.projection, trans);
+
 
 	// 1. Render scene to FBO
 	useFBO(fbo, NULL, NULL);
@@ -127,28 +137,37 @@ void renderScene(void) {
 	drawObjects();
 	printError("Draw me like one of your french girls");
 
-	mat4 trans = Mult(T(0,4,-16), S(2.0, 2.0, 2.0)); // Apply on both
-	projectionViewMatrix = Mult(userCamera.projection, trans);
 	drawModelInstanced(modelCube, instancingProgram, transCubes, projectionViewMatrix);
 	glFlush();
 
 	//2. Render from camera.
+	modelViewMatrix = lookAtv(userCamera.position, userCamera.target, userCamera.normal);
+	projectionViewMatrix = getProjectionViewMatrix(userCamera);
+	cameraTrans = T(userCamera.position.x, userCamera.position.y, userCamera.position.z);
+
 	useFBO(NULL, fbo, NULL);
 	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glCullFace(GL_BACK);
+
+	// Draw skybox
+	glUseProgram(skyboxProgram);
+	glUniformMatrix4fv(glGetUniformLocation(skyboxProgram, "projectionViewMatrix"), 1, GL_TRUE, projectionViewMatrix.m);
+	glBindTexture(GL_TEXTURE_2D, textureSkybox);
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_CULL_FACE);
+	glUniformMatrix4fv(glGetUniformLocation(skyboxProgram, "transform"), 1, GL_TRUE, cameraTrans.m);
+	DrawModel(modelSkybox, skyboxProgram, "in_Position", NULL, "in_TexCoord");
+	glEnable(GL_CULL_FACE);
+	glEnable(GL_DEPTH_TEST);
 
 	glUseProgram(fullProgram);
 	glUniform1i(projTexMapUniform,TEX_UNIT);
 	glActiveTexture(GL_TEXTURE0 + TEX_UNIT);
 	glBindTexture(GL_TEXTURE_2D,fbo->depth);
 
-	modelViewMatrix = lookAtv(userCamera.position, userCamera.target, userCamera.normal);
-
-	glCullFace(GL_BACK);
 	drawObjects();
 
-	trans = Mult(T(0,4,-5), S(5.0, 5.0, 5.0));
-	projectionViewMatrix = getProjectionViewMatrix(userCamera);
 	drawModelInstanced(modelCube, instancingProgram, transCubes, projectionViewMatrix);
 
 	glutSwapBuffers();
@@ -185,7 +204,7 @@ int main(int argc, char** argv) {
 
 	dumpInfo();
 
-	loadShadowShader();
+	initShaders();
 	loadContent();
 	loadObjects();
 	initUserCamera();

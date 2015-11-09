@@ -15,8 +15,6 @@ GLuint textureLocation  = 2;
 GLuint program;
 Model *model;
 
-GLuint groundTexture;
-
 void initializeGround(Model *_model, GLuint _program) {
 	model = _model;
 	program = _program;
