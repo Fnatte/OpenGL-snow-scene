@@ -18,32 +18,12 @@
 
 
 struct Camera userCamera;
+struct Camera lightSource;
 
-#define RENDER_WIDTH 640.0
-#define RENDER_HEIGHT 480.0
-
-// We assign one texture unit in which to store the transformation.
 #define TEX_UNIT 0
+#define FBO_RES 2048
 
-#define NEAR 1.0
-#define FAR 100.0
-#define W 600
-#define H 600
-
-//Camera position
-Point3D p_camera = {32,20,0};
-
-//Camera lookAt
-Point3D l_camera = {2,0,-10};
-
-//Light mouvement circle radius
-float light_mvnt = 40.0f; // At 30 we get edge artifacts
-
-//Light position
 Point3D p_light = {40,20,0};
-
-//Light lookAt
-//Point3D l_light = {0,3,-5};
 Point3D l_light = {0,3,-10};
 
 // Use to activate/disable projTexShader
@@ -82,6 +62,12 @@ void initUserCamera() {
 	userCamera = createUserCamera(position, normal, target, 90.0);
 }
 
+
+void initLightSource() {
+
+}
+
+
 void loadShadowShader() {
 	fullProgram = loadShaders("shaders/full.vert", "shaders/full.frag");
 	projTexMapUniform = glGetUniformLocation(fullProgram,"textureUnit");
@@ -90,24 +76,18 @@ void loadShadowShader() {
 }
 
 
-// This update only change the position of the light.
-void updatePositions(void) {
-	p_light.x = light_mvnt * cos(glutGet(GLUT_ELAPSED_TIME)/1000.0);
-	p_light.z = light_mvnt * sin(glutGet(GLUT_ELAPSED_TIME)/1000.0);
+void rotateLight(void) {
+	p_light.x = 30.0 * -cos(glutGet(GLUT_ELAPSED_TIME)/10000.0);
+	p_light.z = 30.0 * -sin(glutGet(GLUT_ELAPSED_TIME)/10000.0);
 }
 
 
 // Build the transformation sequence for the light source path,
 // by copying from the ordinary camera matrices.
 void setTextureMatrix(void) {
-	mat4 scaleBiasMatrix;
-
-	IdentityMatrix(textureMatrix);
-
 	// Scale and bias transform, moving from unit cube [-1,1] to [0,1]
-	scaleBiasMatrix = Mult(T(0.5, 0.5, 0.0), S(0.5, 0.5, 1.0));
-	textureMatrix = Mult(Mult(scaleBiasMatrix, projectionMatrix), modelViewMatrix);
-	// Multiply modelview and transformation matrices
+	mat4 scaleBiasMatrix = Mult(T(0.5, 0.5, 0.0), S(0.5, 0.5, 1.0));
+	textureMatrix = Mult(Mult(scaleBiasMatrix, userCamera.projection), modelViewMatrix);
 }
 
 
@@ -116,7 +96,7 @@ void loadObjects(void) {
 	if (fullProgram == 0)
 		printf("Warning! Is the shader not loaded?\n");
 	groundModel = LoadDataToModel(ground,	NULL,	NULL,	NULL,	groundIndices, 4,	6);
-	cubeModel = LoadModelPlus("models/octagon.obj");
+	cubeModel = LoadModelPlus("./models/octagon.obj");
 	planeModel = LoadModelPlus("./models/plane.obj");
 	transCubes = T(-10, 100, -10);
 }
@@ -124,7 +104,7 @@ void loadObjects(void) {
 void drawObjects() {
   mat4 mv2, tx2, trans;
 
-	glUniformMatrix4fv(glGetUniformLocation(fullProgram, "projectionMatrix"), 1, GL_TRUE, projectionMatrix.m);
+	glUniformMatrix4fv(glGetUniformLocation(fullProgram, "projectionMatrix"), 1, GL_TRUE, userCamera.projection.m);
 
 	// Ground
 	glUniform1f(glGetUniformLocation(fullProgram, "shade"), 0.3); // Dark ground
@@ -145,12 +125,10 @@ void drawObjects() {
 }
 
 void renderScene(void) {
-	updatePositions();
+	rotateLight();
 	userCamera = moveCameraOnKeyboard(userCamera);
 	mat4 projectionViewMatrix = getProjectionViewMatrix(userCamera);
 
-	// Setup projection matrix
-	projectionMatrix = userCamera.projection;
 	// Setup the modelview from the light source
 	modelViewMatrix = lookAt(p_light.x, p_light.y, p_light.z,
 													 l_light.x, l_light.y, l_light.z, 0,1,0);
@@ -159,7 +137,6 @@ void renderScene(void) {
 
 	// 1. Render scene to FBO
 	useFBO(fbo, NULL, NULL);
-	glViewport(0,0,RENDER_WIDTH,RENDER_HEIGHT);
 	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE); // Depth only
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -172,33 +149,24 @@ void renderScene(void) {
 	printError("Draw me like one of your french girls");
 
 	mat4 trans = Mult(T(0,4,-16), S(2.0, 2.0, 2.0)); // Apply on both
-	projectionViewMatrix = Mult(projectionMatrix, trans);
+	projectionViewMatrix = Mult(userCamera.projection, trans);
 	drawModelInstanced(cubeModel, instancingProgram, transCubes, projectionViewMatrix);
 	glFlush();
 
 	//2. Render from camera.
-	// Now rendering from the camera POV
 	useFBO(NULL, fbo, NULL);
-
-	glViewport(0,0,RENDER_WIDTH,RENDER_HEIGHT);
-	//Enabling color write (previously disabled for light POV z-buffer rendering)
 	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-	// Clear previous frame values
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	//Using the projTex shader
 	glUseProgram(fullProgram);
 	glUniform1i(projTexMapUniform,TEX_UNIT);
 	glActiveTexture(GL_TEXTURE0 + TEX_UNIT);
 	glBindTexture(GL_TEXTURE_2D,fbo->depth);
 
-
-	// Setup the modelview from the camera
 	modelViewMatrix = lookAtv(userCamera.position, userCamera.target, userCamera.normal);
 
 	glCullFace(GL_BACK);
 	drawObjects();
-
 
 	trans = Mult(T(0,4,-5), S(5.0, 5.0, 5.0));
 	projectionViewMatrix = getProjectionViewMatrix(userCamera);
@@ -223,8 +191,6 @@ void onTimer(int value) {
 int main(int argc, char** argv) {
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
-	glutInitWindowPosition(100,100);
-	glutInitWindowSize(RENDER_WIDTH,RENDER_HEIGHT);
 	glutInitContextVersion(3, 1);
 	glutCreateWindow("Shadow mapping demo");
 	glutPassiveMotionFunc(handleMouse);
@@ -245,7 +211,7 @@ int main(int argc, char** argv) {
 	initUserCamera();
 	initKeymapManager();
 	setupInstancedVertexAttributes(instancingProgram, 10);
-	fbo = initFBO2(RENDER_WIDTH,RENDER_HEIGHT, 0, 1);
+	fbo = initFBO2(FBO_RES, FBO_RES, 0, 1);
 	initializeGround(planeModel, fullProgram);
 
 	glEnable(GL_DEPTH_TEST);
