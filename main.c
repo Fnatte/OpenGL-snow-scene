@@ -25,7 +25,6 @@ struct Camera userCamera;
 struct Camera pointLight;
 
 GLuint fullProgram, plainProgram, instancingProgram;
-GLuint projTexMapUniform;
 
 FBOstruct *fbo;
 
@@ -54,7 +53,6 @@ void initpointLight() {
 
 void loadShadowShader() {
 	fullProgram = loadShaders("shaders/full.vert", "shaders/full.frag");
-	projTexMapUniform = glGetUniformLocation(fullProgram,"textureUnit");
 	plainProgram = loadShaders("shaders/plain.vert", "shaders/plain.frag");
 	instancingProgram = loadShaders("./shaders/instancing.vert", "./shaders/instancing.frag");
 }
@@ -110,14 +108,14 @@ void renderScene(void) {
 	mat4 cameraTransform = getProjectionViewMatrix(userCamera);
 	mat4 shadowMapTransform = getShadowMapTransform(lightTransform);
 
+	glUseProgram(plainProgram);
 	// 1. Render scene to FBO
 	useFBO(fbo, NULL, NULL);
 	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE); // Depth only
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	glUseProgram(plainProgram);
 	// Using the simple shader
-	glUniform1i(projTexMapUniform,TEX_UNIT);
+	glUniform1i(glGetUniformLocation(plainProgram,"textureUnit"), TEX_UNIT);
 	glActiveTexture(GL_TEXTURE0 + TEX_UNIT);
 	glBindTexture(GL_TEXTURE_2D,0);
 
@@ -132,7 +130,7 @@ void renderScene(void) {
 	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	glUniform1i(projTexMapUniform,TEX_UNIT);
+	glUniform1i(glGetUniformLocation(plainProgram,"textureUnit"), TEX_UNIT);
 	glActiveTexture(GL_TEXTURE0 + TEX_UNIT);
 	glBindTexture(GL_TEXTURE_2D,fbo->depth);
 

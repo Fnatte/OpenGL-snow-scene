@@ -2,7 +2,6 @@
 
 in vec3 in_Position;
 
-uniform int texunit;
 uniform mat4 shadowMapTransform;
 uniform mat4 modelViewProjectionTransform;
 
