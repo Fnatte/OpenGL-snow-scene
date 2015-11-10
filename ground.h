@@ -1,3 +1,2 @@
 void initializeGround(Model *model, GLuint program);
-void drawGround(mat4 matrix);
-void drawGroundWithProgram(GLuint program);
+void drawGroundWithProgram(GLuint program, mat4 modelViewProjectionTransform, mat4 shadowMapTransform);
