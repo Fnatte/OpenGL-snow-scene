@@ -14,8 +14,8 @@
 #include "instancing.h"
 #include "ground.h"
 #include "camera.h"
-#include "shadow.h"
 #include "content.h"
+
 
 #define TEX_UNIT 0
 #define FBO_RES 2048
@@ -100,7 +100,7 @@ void drawObjects(GLuint program, mat4 modelViewProjectionTransform, mat4 shadowM
 }
 
 void drawSkybox(mat4 transform) {
-	mat4 cameraTrans = T(userCamera.position.x, userCamera.position.y, userCamera.position.z); 
+	mat4 cameraTrans = T(userCamera.position.x, userCamera.position.y, userCamera.position.z);
 
 	glUseProgram(skyboxProgram);
 	glUniformMatrix4fv(glGetUniformLocation(skyboxProgram, "projectionViewMatrix"), 1, GL_TRUE, transform.m);

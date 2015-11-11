@@ -18,7 +18,6 @@ add_executable ( Projekt
 	ground.c
 	camera.c
 	utilities.c
-	shadow.c
 	content.c
 	shaders/instancing.vert
 	shaders/instancing.frag
