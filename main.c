@@ -88,15 +88,8 @@ void loadObjects(void) {
 
 void drawObjects(GLuint program, mat4 modelViewProjectionTransform, mat4 shadowMapTransform) {
   mat4 mv2, tx2, trans;
-	glUseProgram(program);
-	// Ground
-	if (program == fullProgram) {
-		// Dark ground
-		glUniform1f(glGetUniformLocation(program, "shade"), 0.3);
-		glUniformMatrix4fv(glGetUniformLocation(program, "shadowMapTransform"), 1, GL_TRUE, shadowMapTransform.m);
-	}
-	glUniformMatrix4fv(glGetUniformLocation(program, "modelViewProjectionTransform"), 1, GL_TRUE, modelViewProjectionTransform.m);
-	drawGroundWithProgram(program);
+
+	drawGroundWithProgram(program, modelViewProjectionTransform, shadowMapTransform);
 
 	// The cube
 	trans = Mult(T(0,4,-5), S(5.0, 5.0, 5.0));
@@ -141,7 +134,6 @@ void renderScene(void) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	// Using the simple shader
-
 	drawObjects(plainProgram, lightTransform, shadowMapTransform);
 	drawModelInstanced(modelCube, instancingProgram, transCubes, lightTransform);
 	glFlush();
