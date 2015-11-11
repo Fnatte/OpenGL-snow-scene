@@ -1,3 +1,6 @@
+#ifndef CAMERA_H
+#define CAMERA_H
+
 #include "./libraries/VectorUtils3.h"
 
 
@@ -27,3 +30,5 @@ mat4 getProjectionViewMatrix(struct Camera c);
 vec3 cameraDirection(struct Camera c);
 
 struct Camera createUserCamera(vec3 position, vec3 normal, vec3 target, float viewAngle);
+
+#endif
