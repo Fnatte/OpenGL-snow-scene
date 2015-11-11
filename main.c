@@ -15,16 +15,14 @@
 #include "ground.h"
 #include "camera.h"
 #include "content.h"
-
+#include "skybox.h"
 
 #define TEX_UNIT 0
 #define FBO_RES 2048
 
 
-struct Camera userCamera;
 struct Camera pointLight;
 
-GLuint fullProgram, plainProgram, instancingProgram, skyboxProgram;
 
 FBOstruct *fbo;
 
@@ -56,11 +54,7 @@ void initShaders() {
 	fullProgram = loadShaders("shaders/full.vert", "shaders/full.frag");
 	plainProgram = loadShaders("shaders/plain.vert", "shaders/plain.frag");
 	instancingProgram = loadShaders("./shaders/instancing.vert", "./shaders/instancing.frag");
-	skyboxProgram = loadShaders("./shaders/skybox.vert", "./shaders/skybox.frag");
-
-	glUseProgram(skyboxProgram);
-	glActiveTexture(GL_TEXTURE0);
-	glUniform1i(glGetUniformLocation(skyboxProgram, "texUnit"), 0);
+	initializeSkyboxShader();
 }
 
 
@@ -99,19 +93,6 @@ void drawObjects(GLuint program, mat4 modelViewProjectionTransform, mat4 shadowM
 	DrawModel(modelCube, program, "inPosition", NULL, NULL);
 }
 
-void drawSkybox(mat4 transform) {
-	mat4 cameraTrans = T(userCamera.position.x, userCamera.position.y, userCamera.position.z);
-
-	glUseProgram(skyboxProgram);
-	glUniformMatrix4fv(glGetUniformLocation(skyboxProgram, "projectionViewMatrix"), 1, GL_TRUE, transform.m);
-	glBindTexture(GL_TEXTURE_2D, textureSkybox);
-	glDisable(GL_DEPTH_TEST);
-	glDisable(GL_CULL_FACE);
-	glUniformMatrix4fv(glGetUniformLocation(skyboxProgram, "transform"), 1, GL_TRUE, cameraTrans.m);
-	DrawModel(modelSkybox, skyboxProgram, "in_Position", NULL, "in_TexCoord");
-	glEnable(GL_CULL_FACE);
-	glEnable(GL_DEPTH_TEST);
-}
 
 void renderScene(void) {
 	rotateLight();

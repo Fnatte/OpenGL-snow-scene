@@ -19,6 +19,7 @@ add_executable ( Projekt
 	camera.c
 	utilities.c
 	content.c
+	skybox.c
 	shaders/instancing.vert
 	shaders/instancing.frag
 	shaders/skybox.vert

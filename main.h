@@ -2,7 +2,14 @@
 #define MAIN_H
 
 
-GLuint fullProgram, plainProgram, instancingProgram, skyboxProgram;
+#include <GL/glew.h>
+
+#include "camera.h"
+
+
+GLuint fullProgram, plainProgram, instancingProgram;
+struct Camera userCamera;
+
 
 void reshapeViewport(GLsizei w, GLsizei h);
 void initUserCamera();
