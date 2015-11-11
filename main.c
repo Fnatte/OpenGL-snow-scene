@@ -20,7 +20,7 @@
 #define TEX_UNIT 0
 #define FBO_RES 2048
 
-struct Camera userCamera;
+struct ShakeableCamera userCamera;
 struct Camera pointLight;
 
 GLuint fullProgram, plainProgram, instancingProgram, skyboxProgram;
@@ -31,23 +31,24 @@ mat4 transCubes;
 
 void reshapeViewport(GLsizei w, GLsizei h) {
 	glViewport(0, 0, w, h);
-	userCamera.projection = perspective(90, (GLfloat)w/(GLfloat)h, 0.1, 1000);
+	userCamera.base.projection = perspective(90, w/h, 0.1, 1000);
 }
 
 void initUserCamera() {
 	vec3 position = (vec3){1.5f, 20.0f, -50.0f};
 	vec3 normal = (vec3){0.0f, 1.0f, 0.0f};
 	vec3 target = (vec3){10.0f, 15.0f, 5.0f};
-	userCamera = createUserCamera(position, normal, target, 90.0);
+	userCamera = createShakeableCamera(position, normal, target);
+	userCamera.base.projection = perspective(90, (GLfloat)glutGet(GLUT_WINDOW_X) / (GLfloat)glutGet(GLUT_WINDOW_Y), 0.1, 1000);
 }
 
 
-void initpointLight() {
+void initPointLight() {
 	vec3 position = (vec3){40, 20, 0};
 	vec3 target = (vec3){0, 3, -10};
 	vec3 normal = CrossProduct(position, target);
-	pointLight = (struct Camera)
-		{ position, normal, target, perspective(90.0, 1.0 , 10, 4000) };
+	pointLight = createCamera(position, normal, target);
+	pointLight.projection = perspective(10, 1, 10, 4000);
 }
 
 
@@ -100,12 +101,12 @@ void drawObjects(GLuint program, mat4 modelViewProjectionTransform, mat4 shadowM
 		glUniform1f(glGetUniformLocation(program, "shade"), 0.9);
 		glUniformMatrix4fv(glGetUniformLocation(program, "shadowMapTransform"), 1, GL_TRUE, tx2.m);
 	}
-		glUniformMatrix4fv(glGetUniformLocation(program, "modelViewProjectionTransform"), 1, GL_TRUE, mv2.m);
+	glUniformMatrix4fv(glGetUniformLocation(program, "modelViewProjectionTransform"), 1, GL_TRUE, mv2.m);
 	DrawModel(modelCube, program, "inPosition", NULL, NULL);
 }
 
 void drawSkybox(mat4 modelViewProjectionTransform) {
-	mat4 cameraTrans = T(userCamera.position.x, userCamera.position.y, userCamera.position.z);
+	mat4 cameraTrans = T(userCamera.base.position.x, userCamera.base.position.y, userCamera.base.position.z);
 
 	glUseProgram(skyboxProgram);
 	glUniformMatrix4fv(glGetUniformLocation(skyboxProgram, "projectionViewMatrix"), 1, GL_TRUE, modelViewProjectionTransform.m);
@@ -121,9 +122,9 @@ void drawSkybox(mat4 modelViewProjectionTransform) {
 
 void renderScene(void) {
 	rotateLight();
-	userCamera = updateCamera(userCamera);
-	mat4 lightTransform = getProjectionViewMatrix(pointLight);
-	mat4 cameraTransform = getProjectionViewMatrix(userCamera);
+	updateCamera(&userCamera);
+	mat4 lightTransform = getProjectionViewMatrix(&pointLight);
+	mat4 cameraTransform = getProjectionViewMatrix((struct Camera *)&userCamera);
 	mat4 shadowMapTransform = getShadowMapTransform(lightTransform);
 
 	glUseProgram(plainProgram);
@@ -156,7 +157,7 @@ void renderScene(void) {
 
 
 void handleMouse(int x, int y) {
-	userCamera = updateCameraByMouse(userCamera, x, y);
+	updateCameraByMouse((struct Camera *) &userCamera, x, y);
 }
 
 
@@ -190,7 +191,7 @@ int main(int argc, char** argv) {
 	loadContent();
 	loadObjects();
 	initUserCamera();
-	initpointLight();
+	initPointLight();
 	initKeymapManager();
 	setupInstancedVertexAttributes(instancingProgram, 10);
 	initializeGround(modelPlane, fullProgram);
