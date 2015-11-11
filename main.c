@@ -112,7 +112,6 @@ void renderScene(void) {
 	glUniform1i(glGetUniformLocation(plainProgram,"textureUnit"), TEX_UNIT);
 	glActiveTexture(GL_TEXTURE0 + TEX_UNIT);
 	glBindTexture(GL_TEXTURE_2D,0);
-
 	drawObjects(plainProgram, lightTransform, shadowMapTransform);
 	drawModelInstanced(modelCube, instancingProgram, transCubes, lightTransform);
 	glFlush();

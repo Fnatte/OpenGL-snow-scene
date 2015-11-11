@@ -7,3 +7,5 @@
 void drawObject(mat4 transform, Model* model, GLuint p);
 
 void handleMouse(int x, int y);
+
+GLuint fullProgram, plainProgram, instancingProgram;

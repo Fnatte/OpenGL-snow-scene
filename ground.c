@@ -1,12 +1,13 @@
 #include <GL/glew.h>
 
-#include "./libraries/GLUtilities.h"
-#include "./libraries/LoadObject.h"
-#include "./libraries/LoadTGA.h"
-#include "./libraries/VectorUtils3.h"
+#include "libraries/GLUtilities.h"
+#include "libraries/LoadObject.h"
+#include "libraries/LoadTGA.h"
+#include "libraries/VectorUtils3.h"
 
-#include "./utilities.h"
-#include "./content.h"
+#include "utilities.h"
+#include "content.h"
+#include "main.h"
 
 GLuint positionLocation = 0;
 GLuint normalLocation   = 1;
@@ -28,8 +29,10 @@ void initializeGround(Model *_model, GLuint program) {
 
 void drawGroundWithProgram(GLuint program, mat4 modelViewProjectionTransform, mat4 shadowMapTransform) {
 	glUseProgram(program);
+	if (program == fullProgram) {
+		glUniformMatrix4fv(shadowMapLocation, 1, GL_TRUE, shadowMapTransform.m);
+	}
 	glUniform1f(glGetUniformLocation(program, "shade"), 0.3);
-	glUniformMatrix4fv(shadowMapLocation, 1, GL_TRUE, shadowMapTransform.m);
 	glUniformMatrix4fv(modelViewProjectionLocation, 1, GL_TRUE, modelViewProjectionTransform.m);
 
 	// Uncommenting this disables shadows.
