@@ -20,7 +20,6 @@
 #define TEX_UNIT 0
 #define FBO_RES 2048
 
-
 struct Camera userCamera;
 struct Camera pointLight;
 
@@ -122,7 +121,7 @@ void drawSkybox(mat4 modelViewProjectionTransform) {
 
 void renderScene(void) {
 	rotateLight();
-	userCamera = moveCameraOnKeyboard(userCamera);
+	userCamera = updateCamera(userCamera);
 	mat4 lightTransform = getProjectionViewMatrix(pointLight);
 	mat4 cameraTransform = getProjectionViewMatrix(userCamera);
 	mat4 shadowMapTransform = getShadowMapTransform(lightTransform);
@@ -157,7 +156,7 @@ void renderScene(void) {
 
 
 void handleMouse(int x, int y) {
-	userCamera = rotateCameraByMouse(userCamera, x, y);
+	userCamera = updateCameraByMouse(userCamera, x, y);
 }
 
 

@@ -5,6 +5,47 @@
 #include "./libraries/VectorUtils3.h"
 #include "camera.h"
 
+#define MODE_MOVIE 0
+#define MODE_INTERACTIVE 1
+
+int currentMode = MODE_MOVIE;
+
+int wasModeKeyDown = 0;
+
+struct Camera updateCamera(struct Camera c) {
+	struct Camera nextCamera;
+
+	// Allow mode change by keyboard
+	if(wasModeKeyDown && !keyIsDown(' ')) {
+		currentMode = (currentMode + 1) % 2;
+		printf("Mode changed to %s\n", getCurrentModeString());
+	}
+	wasModeKeyDown = keyIsDown(' ');
+
+	// Calculate next camera state
+	switch(currentMode) {
+		case MODE_MOVIE:
+			nextCamera = shakeCamera(c, 1);
+			break;
+		case MODE_INTERACTIVE:
+			nextCamera = moveCameraOnKeyboard(c);
+			break;
+		default:
+			nextCamera = c;
+			break;
+	}
+
+
+	return nextCamera;
+}
+
+struct Camera updateCameraByMouse(struct Camera c, int x, int y) {
+	if(currentMode == MODE_INTERACTIVE) {
+		return rotateCameraByMouse(c, x, y);
+	}
+
+	return c;
+}
 
 struct Camera moveCameraOnKeyboard(struct Camera c) {
 	vec3 forward;
@@ -19,37 +60,21 @@ struct Camera moveCameraOnKeyboard(struct Camera c) {
 	}
 
 	if(keyIsDown('w')) {
-		c.position.x += forward.x;
-		c.target.x += forward.x;
-		c.position.y += forward.y;
-		c.target.y += forward.y;
-		c.position.z += forward.z;
-		c.target.z += forward.z;
+		c.position = VectorAdd(c.position, forward);
+		c.target = VectorAdd(c.target, forward);
 	}
 	else if (keyIsDown('s')) {
-		c.position.x -= forward.x;
-		c.target.x -= forward.x;
-		c.position.y -= forward.y;
-		c.target.y -= forward.y;
-		c.position.z -= forward.z;
-		c.target.z -= forward.z;
+		c.position = VectorSub(c.position, forward);
+		c.target = VectorSub(c.target, forward);
 	}
 
 	if(keyIsDown('a')){
-		c.position.x -= leftV.x;
-		c.target.x -= leftV.x;
-		c.position.y -= leftV.y;
-		c.target.y -= leftV.y;
-		c.position.z -= leftV.z;
-		c.target.z -= leftV.z;
+		c.position = VectorSub(c.position, leftV);
+		c.target = VectorSub(c.target, leftV);
 	}
 	else if(keyIsDown('d')){
-		c.position.x += leftV.x;
-		c.target.x += leftV.x;
-		c.position.y += leftV.y;
-		c.target.y += leftV.y;
-		c.position.z += leftV.z;
-		c.target.z += leftV.z;
+		c.position = VectorAdd(c.position, leftV);
+		c.target = VectorAdd(c.target, leftV);
 	}
 
 	if(keyIsDown('q')) {
@@ -65,7 +90,7 @@ struct Camera moveCameraOnKeyboard(struct Camera c) {
 }
 
 
-struct Camera smoothRandomMovement(struct Camera c, float magnitude) {
+struct Camera shakeCamera(struct Camera c, float magnitude) {
 	GLfloat time = (GLfloat)glutGet(GLUT_ELAPSED_TIME) / 1000;
 	c.target.y += sin(time) * magnitude;
 	return c;
@@ -100,4 +125,15 @@ struct Camera createUserCamera(vec3 position, vec3 normal, vec3 target, float vi
 		{ position, normal, target,
 			perspective(viewAngle, (GLfloat)glutGet(GLUT_WINDOW_X)/(GLfloat)glutGet(GLUT_WINDOW_Y), 10, 4000) };
 	return c;
+}
+
+const char* getCurrentModeString() {
+	static char* strings[] = { "movie", "interactive" };
+	static char* badModeString = "invalid";
+
+	if(currentMode < 0 || currentMode >= 2) {
+		return badModeString;
+	}
+
+	return strings[currentMode];
 }
