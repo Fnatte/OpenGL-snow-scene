@@ -24,7 +24,7 @@
 struct Camera userCamera;
 struct Camera pointLight;
 
-GLuint fullProgram, plainProgram, instancingProgram;
+GLuint fullProgram, plainProgram, instancingProgram, skyboxProgram;
 
 FBOstruct *fbo;
 
@@ -52,10 +52,15 @@ void initpointLight() {
 }
 
 
-void loadShadowShader() {
+void initShaders() {
 	fullProgram = loadShaders("shaders/full.vert", "shaders/full.frag");
 	plainProgram = loadShaders("shaders/plain.vert", "shaders/plain.frag");
 	instancingProgram = loadShaders("./shaders/instancing.vert", "./shaders/instancing.frag");
+	skyboxProgram = loadShaders("./shaders/skybox.vert", "./shaders/skybox.frag");
+
+	glUseProgram(skyboxProgram);
+	glActiveTexture(GL_TEXTURE0);
+	glUniform1i(glGetUniformLocation(skyboxProgram, "texUnit"), 0);
 }
 
 
@@ -94,10 +99,24 @@ void drawObjects(GLuint program, mat4 modelViewProjectionTransform, mat4 shadowM
 	DrawModel(modelCube, program, "inPosition", NULL, NULL);
 }
 
+void drawSkybox(mat4 transform) {
+	mat4 cameraTrans = T(userCamera.position.x, userCamera.position.y, userCamera.position.z); 
+
+	glUseProgram(skyboxProgram);
+	glUniformMatrix4fv(glGetUniformLocation(skyboxProgram, "projectionViewMatrix"), 1, GL_TRUE, transform.m);
+	glBindTexture(GL_TEXTURE_2D, textureSkybox);
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_CULL_FACE);
+	glUniformMatrix4fv(glGetUniformLocation(skyboxProgram, "transform"), 1, GL_TRUE, cameraTrans.m);
+	DrawModel(modelSkybox, skyboxProgram, "in_Position", NULL, "in_TexCoord");
+	glEnable(GL_CULL_FACE);
+	glEnable(GL_DEPTH_TEST);
+}
 
 void renderScene(void) {
 	rotateLight();
 	userCamera = moveCameraOnKeyboard(userCamera);
+
 	mat4 lightTransform = getProjectionViewMatrix(pointLight);
 	mat4 cameraTransform = getProjectionViewMatrix(userCamera);
 	mat4 shadowMapTransform = getShadowMapTransform(lightTransform);
@@ -118,11 +137,14 @@ void renderScene(void) {
 	printError("Draw me like one of your french girls");
 
 	// 2. Render from camera.
-	glUseProgram(fullProgram);
 	useFBO(NULL, fbo, NULL);
 	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glCullFace(GL_BACK);
 
+	drawSkybox(cameraTransform);
+
+	glUseProgram(fullProgram);
 	glUniform1i(glGetUniformLocation(plainProgram,"textureUnit"), TEX_UNIT);
 	glActiveTexture(GL_TEXTURE0 + TEX_UNIT);
 	glBindTexture(GL_TEXTURE_2D,fbo->depth);
@@ -131,6 +153,7 @@ void renderScene(void) {
 	drawObjects(fullProgram, cameraTransform, shadowMapTransform);
 	drawModelInstanced(modelCube, instancingProgram, transCubes, cameraTransform);
 	printError("Draw me like one of your italian girls");
+
 	glutSwapBuffers();
 }
 
@@ -165,7 +188,7 @@ int main(int argc, char** argv) {
 
 	dumpInfo();
 
-	loadShadowShader();
+	initShaders();
 	loadContent();
 	loadObjects();
 	initUserCamera();

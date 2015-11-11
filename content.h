@@ -7,9 +7,11 @@
 Model *modelGround;
 Model *modelCube;
 Model *modelPlane;
+Model *modelSkybox;
 
 GLuint textureGroundDiffuse;
 GLuint textureGroundSpecular;
 GLuint textureGroundNormal;
+GLuint textureSkybox;
 
 void loadContent();
