@@ -1,11 +1,25 @@
-/**
- * Draws the object with the specified transform.
- *
- * @param transform The transform to be applied to the model.
- * @param model The model to be drawn.
- */
-void drawObject(mat4 transform, Model* model, GLuint p);
+#ifndef MAIN_H
+#define MAIN_H
 
+
+#include <GL/glew.h>
+
+#include "camera.h"
+
+
+GLuint fullProgram, plainProgram;
+struct Camera userCamera;
+
+
+void reshapeViewport(GLsizei w, GLsizei h);
+void initUserCamera();
+void initpointLight();
+void rotateLight();
+mat4 getShadowMapTransform(mat4 modelViewProjectionTransform);
+void renderScene(void);
 void handleMouse(int x, int y);
+void onTimer(int value);
+int main(int argc, char** argv);
 
-GLuint fullProgram, plainProgram, instancingProgram;
+
+#endif

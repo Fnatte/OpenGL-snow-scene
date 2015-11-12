@@ -17,5 +17,5 @@ void loadContent() {
 	LoadTGATextureSimple("./textures/ground/diffuse.tga", &textureGroundDiffuse);
 	LoadTGATextureSimple("./textures/ground/specular.tga", &textureGroundSpecular);
 	LoadTGATextureSimple("./textures/ground/normal.tga", &textureGroundNormal); 
-	LoadTGATextureSimple("./textures/SkyBox512.tga", &textureSkybox); 
+	LoadTGATextureSimple("./textures/SkyBox512.tga", &textureSkybox);
 }

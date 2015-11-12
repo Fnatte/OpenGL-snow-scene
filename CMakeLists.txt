@@ -18,18 +18,16 @@ add_executable ( Projekt
 	ground.c
 	camera.c
 	utilities.c
-	shadow.c
 	content.c
+	skybox.c
 	shaders/instancing.vert
 	shaders/instancing.frag
 	shaders/skybox.vert
 	shaders/skybox.frag
-	shaders/ground.vert
-	shaders/ground.vert
-	shaders/plainTexture.frag
-	shaders/plainTexture.frag
-	shaders/depth.frag
-	shaders/depth.frag
+	shaders/plain.vert
+	shaders/plain.frag
+	shaders/full.vert
+	shaders/full.frag
 )
 target_link_libraries ( Projekt
 	${OPENGL_LIBRARIES}

@@ -1,3 +1,6 @@
+#ifndef CAMERA_H
+#define CAMERA_H
+
 #include "./libraries/VectorUtils3.h"
 
 struct Camera {
@@ -69,3 +72,4 @@ void shakeCamera(struct ShakeableCamera *camera);
  */
 void updateCamera(struct ShakeableCamera *c);
 
+#endif
