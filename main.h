@@ -7,7 +7,7 @@
 #include "camera.h"
 
 
-GLuint fullProgram, plainProgram, instancingProgram;
+GLuint fullProgram, plainProgram;
 struct Camera userCamera;
 
 

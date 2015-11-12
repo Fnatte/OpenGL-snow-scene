@@ -17,6 +17,7 @@
 #include "content.h"
 #include "skybox.h"
 
+
 #define TEX_UNIT 0
 #define FBO_RES 2048
 
@@ -113,7 +114,7 @@ void renderScene(void) {
 	glActiveTexture(GL_TEXTURE0 + TEX_UNIT);
 	glBindTexture(GL_TEXTURE_2D,0);
 	drawObjects(plainProgram, lightTransform, shadowMapTransform);
-	drawModelInstanced(modelCube, instancingProgram, transCubes, lightTransform);
+	drawModelInstanced(modelCube, transCubes, lightTransform);
 	glFlush();
 	printError("Draw me like one of your french girls");
 
@@ -132,7 +133,7 @@ void renderScene(void) {
 
 	glCullFace(GL_BACK);
 	drawObjects(fullProgram, cameraTransform, shadowMapTransform);
-	drawModelInstanced(modelCube, instancingProgram, transCubes, cameraTransform);
+	drawModelInstanced(modelCube, transCubes, cameraTransform);
 	printError("Draw me like one of your italian girls");
 
 	glutSwapBuffers();

@@ -39,9 +39,9 @@ void initializeInstancingShader(int _count) {
 }
 
 
-void drawModelInstanced(Model *m, GLuint program, mat4 transEverything, mat4 projectionViewMatrix) {
-	glUseProgram(program);
-	glUniformMatrix4fv(glGetUniformLocation(program, "projectionViewMatrix"), 1, GL_TRUE, projectionViewMatrix.m);
+void drawModelInstanced(Model *m, mat4 transEverything, mat4 projectionViewMatrix) {
+	glUseProgram(instancingProgram);
+	glUniformMatrix4fv(glGetUniformLocation(instancingProgram, "projectionViewMatrix"), 1, GL_TRUE, projectionViewMatrix.m);
 
 	GLfloat time = glutGet(GLUT_ELAPSED_TIME) / 1000.0;
 
