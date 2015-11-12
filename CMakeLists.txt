@@ -24,12 +24,10 @@ add_executable ( Projekt
 	shaders/instancing.frag
 	shaders/skybox.vert
 	shaders/skybox.frag
-	shaders/ground.vert
-	shaders/ground.vert
-	shaders/plainTexture.frag
-	shaders/plainTexture.frag
-	shaders/depth.frag
-	shaders/depth.frag
+	shaders/plain.vert
+	shaders/plain.frag
+	shaders/full.vert
+	shaders/full.frag
 )
 target_link_libraries ( Projekt
 	${OPENGL_LIBRARIES}
