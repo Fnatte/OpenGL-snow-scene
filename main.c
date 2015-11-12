@@ -46,7 +46,7 @@ void initPointLight() {
 	vec3 target = (vec3){0, 3, -10};
 	vec3 normal = CrossProduct(position, target);
 	pointLight = createCamera(position, normal, target);
-	pointLight.projection = perspective(10, 1, 10, 4000);
+	pointLight.projection = perspective(90, 1, 10, 4000);
 }
 
 
@@ -56,13 +56,9 @@ void initShaders() {
 
 	glUseProgram(plainProgram);
 	glUniform1i(glGetUniformLocation(plainProgram, "textureUnit"), TEX_UNIT);
-	glActiveTexture(GL_TEXTURE0 + TEX_UNIT);
-	glBindTexture(GL_TEXTURE_2D, 0);
 
 	glUseProgram(fullProgram);
 	glUniform1i(glGetUniformLocation(plainProgram, "textureUnit"), TEX_UNIT);
-	glActiveTexture(GL_TEXTURE0 + TEX_UNIT);
-	glBindTexture(GL_TEXTURE_2D, fbo->depth);
 
 	initializeInstancingShader(10);
 	initializeSkyboxShader();
@@ -113,6 +109,8 @@ void renderScene(void) {
 	mat4 shadowMapTransform = getShadowMapTransform(lightTransform);
 
 	glUseProgram(plainProgram);
+	glActiveTexture(GL_TEXTURE0 + TEX_UNIT);
+	glBindTexture(GL_TEXTURE_2D, 0);
 	// 1. Render scene to FBO
 	useFBO(fbo, NULL, NULL);
 	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE); // Depth only
@@ -133,6 +131,8 @@ void renderScene(void) {
 	drawSkybox(cameraTransform);
 
 	glUseProgram(fullProgram);
+	glActiveTexture(GL_TEXTURE0 + TEX_UNIT);
+	glBindTexture(GL_TEXTURE_2D,fbo->depth);
 
 	glCullFace(GL_BACK);
 	drawObjects(fullProgram, cameraTransform, shadowMapTransform);
