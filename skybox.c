@@ -25,7 +25,7 @@ void initializeSkyboxShader() {
 
 
 void drawSkybox(mat4 transform) {
-	mat4 cameraTrans = T(userCamera.position.x, userCamera.position.y, userCamera.position.z);
+	mat4 cameraTrans = T(userCamera.base.position.x, userCamera.base.position.y, userCamera.base.position.z);
 
 	glUseProgram(skyboxProgram);
 	glUniformMatrix4fv(projectionViewLocation, 1, GL_TRUE, transform.m);

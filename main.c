@@ -21,16 +21,7 @@
 #define TEX_UNIT 0
 #define FBO_RES 2048
 
-<<<<<<< HEAD
-struct ShakeableCamera userCamera;
 struct Camera pointLight;
-
-GLuint fullProgram, plainProgram, instancingProgram, skyboxProgram;
-=======
-
-struct Camera pointLight;
-
->>>>>>> 488266c1d9a869b5c8cc8dfbaf8c9be4d6ad1ddf
 
 FBOstruct *fbo;
 
@@ -112,21 +103,6 @@ void drawObjects(GLuint program, mat4 modelViewProjectionTransform, mat4 shadowM
 	glUniformMatrix4fv(glGetUniformLocation(program, "modelViewProjectionTransform"), 1, GL_TRUE, mv2.m);
 	DrawModel(modelCube, program, "inPosition", NULL, NULL);
 }
-
-void drawSkybox(mat4 modelViewProjectionTransform) {
-	mat4 cameraTrans = T(userCamera.base.position.x, userCamera.base.position.y, userCamera.base.position.z);
-
-	glUseProgram(skyboxProgram);
-	glUniformMatrix4fv(glGetUniformLocation(skyboxProgram, "projectionViewMatrix"), 1, GL_TRUE, modelViewProjectionTransform.m);
-	glBindTexture(GL_TEXTURE_2D, textureSkybox);
-	glDisable(GL_DEPTH_TEST);
-	glDisable(GL_CULL_FACE);
-	glUniformMatrix4fv(glGetUniformLocation(skyboxProgram, "transform"), 1, GL_TRUE, cameraTrans.m);
-	DrawModel(modelSkybox, skyboxProgram, "in_Position", NULL, "in_TexCoord");
-	glEnable(GL_CULL_FACE);
-	glEnable(GL_DEPTH_TEST);
-}
-
 
 void renderScene(void) {
 	rotateLight();

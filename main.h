@@ -8,7 +8,7 @@
 
 
 GLuint fullProgram, plainProgram;
-struct Camera userCamera;
+struct ShakeableCamera userCamera;
 
 
 void reshapeViewport(GLsizei w, GLsizei h);
