@@ -53,7 +53,7 @@ void initpointLight() {
 void initShaders() {
 	fullProgram = loadShaders("shaders/full.vert", "shaders/full.frag");
 	plainProgram = loadShaders("shaders/plain.vert", "shaders/plain.frag");
-	instancingProgram = loadShaders("./shaders/instancing.vert", "./shaders/instancing.frag");
+	initializeInstancingShader(10);
 	initializeSkyboxShader();
 }
 
@@ -175,7 +175,6 @@ int main(int argc, char** argv) {
 	initUserCamera();
 	initpointLight();
 	initKeymapManager();
-	setupInstancedVertexAttributes(instancingProgram, 10);
 	fbo = initFBO2(FBO_RES, FBO_RES, 0, 1);
 	initializeGround(modelPlane, fullProgram);
 

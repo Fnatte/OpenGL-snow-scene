@@ -25,10 +25,13 @@ float* randoms;
 
 GLuint count;
 
+GLuint instancingProgram;
 
-void setupInstancedVertexAttributes(GLuint prog, int _count) {
+
+void initializeInstancingShader(int _count) {
+	instancingProgram = loadShaders("./shaders/instancing.vert", "./shaders/instancing.frag");
 	count = _count;
-	glUseProgram(prog);
+	glUseProgram(instancingProgram);
 	glGenBuffers(1, &instanceTransBuffer);
 	glGenBuffers(1, &testBuffer);
 
