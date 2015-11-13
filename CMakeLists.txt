@@ -15,7 +15,6 @@ add_subdirectory (libraries)
 add_executable ( Projekt
 	main.c
 	instancing.c
-	ground.c
 	camera.c
 	utilities.c
 	content.c

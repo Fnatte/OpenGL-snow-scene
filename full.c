@@ -24,7 +24,7 @@ void initializeFullShader(GLuint texUnit) {
 }
 
 
-void drawFull(Model *m, mat4 modelViewProjectionTransform, mat4 shadowMapTransform, mat4 modelTransform) {
+void drawFull(Model *m, mat4 modelViewProjectionTransform, mat4 shadowMapTransform, mat4 modelTransform, GLfloat shade) {
 	modelViewProjectionTransform = Mult(modelViewProjectionTransform, modelTransform);
 	shadowMapTransform = Mult(shadowMapTransform, modelTransform);
 
@@ -32,7 +32,7 @@ void drawFull(Model *m, mat4 modelViewProjectionTransform, mat4 shadowMapTransfo
 
 	glUniformMatrix4fv(modelViewProjectionLocation, 1, GL_TRUE, modelViewProjectionTransform.m);
 		glUniformMatrix4fv(shadowMapLocation, 1, GL_TRUE, shadowMapTransform.m);
-	glUniform1f(shadeLocation, 0.9);
+	glUniform1f(shadeLocation, shade);
 
 	// Vertex positions.
 	glBindVertexArray(m->vao);

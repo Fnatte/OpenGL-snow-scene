@@ -6,4 +6,4 @@
 GLuint fullProgram;
 
 void initializeFullShader(GLuint texUnit);
-void drawFull(Model* m, mat4 modelViewProjectionTransform, mat4 shadowMapTransform, mat4 modelTransform);
+void drawFull(Model* m, mat4 modelViewProjectionTransform, mat4 shadowMapTransform, mat4 modelTransform, GLfloat shade);

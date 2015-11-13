@@ -12,7 +12,6 @@
 
 #include "main.h"
 #include "instancing.h"
-#include "ground.h"
 #include "camera.h"
 #include "content.h"
 #include "skybox.h"
@@ -28,7 +27,6 @@ FBOstruct *fbo;
 mat4 transCubes;
 mat4 transLightPost;
 GLuint TEX_UNIT = 0;
-
 
 
 void reshapeViewport(GLsizei w, GLsizei h) {
@@ -101,12 +99,10 @@ void renderScene(void) {
 	drawSkybox(cameraTransform);
 
 	glBindTexture(GL_TEXTURE_2D, fbo->depth);
-
-	drawFull(modelLightPost, cameraTransform, shadowMapTransform, transLightPost);
+	drawFull(modelLightPost, cameraTransform, shadowMapTransform, transLightPost, 0.9);
 	drawModelInstanced(modelCube, transCubes, cameraTransform);
-	drawGroundWithProgram(fullProgram, cameraTransform, shadowMapTransform);
+	drawFull(modelPlane, cameraTransform, shadowMapTransform, T(0,0,0), 0.5);
 	printError("Draw me like one of your italian girls");
-
 	glutSwapBuffers();
 }
 
@@ -127,7 +123,7 @@ int main(int argc, char** argv) {
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
 	glutInitContextVersion(3, 1);
-	glutCreateWindow("Shadow mapping demo");
+	glutCreateWindow("Let it Snow!");
 	glutPassiveMotionFunc(handleMouse);
 	glutReshapeFunc(reshapeViewport);
 
@@ -147,7 +143,6 @@ int main(int argc, char** argv) {
 	initUserCamera();
 	initPointLight();
 	initKeymapManager();
-	initializeGround(modelPlane, fullProgram);
 
 	transCubes = T(-20, 100, -20);
 	transLightPost =  S(5.0, 5.0, 5.0);
