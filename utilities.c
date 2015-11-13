@@ -3,8 +3,7 @@
 #include <math.h>
 #include <time.h>
 
-#include "./libraries/LoadObject.h"
-
+#include "utilities.h"
 
 void drawModelWithLocations(Model *m, GLuint positionLoc, GLuint normalLoc, GLuint textureLoc)
 {
@@ -36,4 +35,14 @@ float* getRandFloatArray(int size, float upperLimit, float lowerLimit) {
 		randoms[i] = (float)rand() / (float)(RAND_MAX / (upperLimit - lowerLimit)) + lowerLimit;
 	}
 	return randoms;
+}
+
+vec3 getRandVec3(float upperLimit, float lowerLimit) {
+	float divider = (float)(RAND_MAX / (upperLimit - lowerLimit)) + lowerLimit;
+
+	return SetVector(
+		(float)rand() / divider,
+		(float)rand() / divider,
+		(float)rand() / divider
+	);
 }
