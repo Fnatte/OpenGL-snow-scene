@@ -20,6 +20,7 @@ add_executable ( Projekt
 	utilities.c
 	content.c
 	skybox.c
+	plain.c
 	shaders/instancing.vert
 	shaders/instancing.frag
 	shaders/skybox.vert

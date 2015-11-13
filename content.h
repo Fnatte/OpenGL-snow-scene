@@ -8,6 +8,7 @@ Model *modelGround;
 Model *modelCube;
 Model *modelPlane;
 Model *modelSkybox;
+Model *modelLightPost;
 
 GLuint textureGroundDiffuse;
 GLuint textureGroundSpecular;

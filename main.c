@@ -16,21 +16,23 @@
 #include "camera.h"
 #include "content.h"
 #include "skybox.h"
+#include "plain.h"
 
 
-#define TEX_UNIT 0
 #define FBO_RES 2048
 
+
 struct Camera pointLight;
-
 FBOstruct *fbo;
-
 mat4 transCubes;
+GLuint TEX_UNIT = 0;
+
 
 void reshapeViewport(GLsizei w, GLsizei h) {
 	glViewport(0, 0, w, h);
 	userCamera.base.projection = perspective(90, w/h, 0.1, 1000);
 }
+
 
 void initUserCamera() {
 	vec3 position = (vec3){1.5f, 20.0f, -50.0f};
@@ -52,16 +54,12 @@ void initPointLight() {
 
 void initShaders() {
 	fullProgram = loadShaders("shaders/full.vert", "shaders/full.frag");
-	plainProgram = loadShaders("shaders/plain.vert", "shaders/plain.frag");
-
-	glUseProgram(plainProgram);
-	glUniform1i(glGetUniformLocation(plainProgram, "textureUnit"), TEX_UNIT);
-
-	glUseProgram(fullProgram);
-	glUniform1i(glGetUniformLocation(plainProgram, "textureUnit"), TEX_UNIT);
-
+	initializePlainShader(TEX_UNIT);
 	initializeInstancingShader(10);
 	initializeSkyboxShader();
+
+	glUseProgram(fullProgram);
+	glUniform1i(glGetUniformLocation(fullProgram, "textureUnit"), TEX_UNIT);
 }
 
 
@@ -69,6 +67,7 @@ void rotateLight(void) {
 	pointLight.position.x = 30.0 * -cos(glutGet(GLUT_ELAPSED_TIME)/10000.0);
 	pointLight.position.z = 30.0 * -sin(glutGet(GLUT_ELAPSED_TIME)/10000.0);
 }
+
 
 mat4 getShadowMapTransform(mat4 modelViewProjectionTransform) {
 	// Scale and bias transform, moving from unit cube [-1,1] to [0,1]
@@ -81,24 +80,26 @@ void loadObjects(void) {
 	transCubes = T(-10, 100, -10);
 }
 
+
 void drawObjects(GLuint program, mat4 modelViewProjectionTransform, mat4 shadowMapTransform) {
   mat4 mv2, tx2, trans;
 
 	drawGroundWithProgram(program, modelViewProjectionTransform, shadowMapTransform);
 
+
 	// The cube
 	trans = Mult(T(0,4,-5), S(5.0, 5.0, 5.0));
 	mv2 = Mult(modelViewProjectionTransform, trans); // Apply on both
 	tx2 = Mult(shadowMapTransform, trans);
-	// Upload both!
 	if (program == fullProgram) {
-		// Brighter objects
 		glUniform1f(glGetUniformLocation(program, "shade"), 0.9);
 		glUniformMatrix4fv(glGetUniformLocation(program, "shadowMapTransform"), 1, GL_TRUE, tx2.m);
 	}
 	glUniformMatrix4fv(glGetUniformLocation(program, "modelViewProjectionTransform"), 1, GL_TRUE, mv2.m);
 	DrawModel(modelCube, program, "inPosition", NULL, NULL);
+	drawPlain2(modelLightPost, modelViewProjectionTransform);
 }
+
 
 void renderScene(void) {
 	rotateLight();
@@ -138,6 +139,8 @@ void renderScene(void) {
 	drawObjects(fullProgram, cameraTransform, shadowMapTransform);
 	drawModelInstanced(modelCube, transCubes, cameraTransform);
 	printError("Draw me like one of your italian girls");
+
+	drawPlain(modelLightPost, cameraTransform, T(0,0,0));
 
 	glutSwapBuffers();
 }
