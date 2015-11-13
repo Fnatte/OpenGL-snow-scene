@@ -15,11 +15,12 @@ static GLuint shadowMapLocation;
 static GLuint shadeLocation;
 
 
-void initializeFullShader() {
+void initializeFullShader(GLuint texUnit) {
 	fullProgram = loadShaders("shaders/full.vert", "shaders/full.frag");
 	modelViewProjectionLocation =	glGetUniformLocation(fullProgram, "modelViewProjectionTransform");
 	shadowMapLocation = glGetUniformLocation(fullProgram, "shadowMapTransform");
 	shadeLocation = glGetUniformLocation(fullProgram, "shade");
+	glUniform1i(glGetUniformLocation(fullProgram, "textureUnit"), texUnit);
 }
 
 
@@ -28,6 +29,7 @@ void drawFull(Model *m, mat4 modelViewProjectionTransform, mat4 shadowMapTransfo
 	shadowMapTransform = Mult(shadowMapTransform, modelTransform);
 
 	glUseProgram(fullProgram);
+
 	glUniformMatrix4fv(modelViewProjectionLocation, 1, GL_TRUE, modelViewProjectionTransform.m);
 		glUniformMatrix4fv(shadowMapLocation, 1, GL_TRUE, shadowMapTransform.m);
 	glUniform1f(shadeLocation, 0.9);

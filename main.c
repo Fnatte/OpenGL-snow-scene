@@ -26,8 +26,9 @@
 struct Camera pointLight;
 FBOstruct *fbo;
 mat4 transCubes;
-GLuint TEX_UNIT = 0;
 mat4 transLightPost;
+GLuint TEX_UNIT = 0;
+
 
 
 void reshapeViewport(GLsizei w, GLsizei h) {
@@ -55,16 +56,10 @@ void initPointLight() {
 
 
 void initShaders() {
-	initializeFullShader();
+	initializeFullShader(TEX_UNIT);
+	initializePlainShader(TEX_UNIT);
 	initializeInstancingShader(10);
 	initializeSkyboxShader();
-	plainProgram = loadShaders("shaders/plain.vert", "shaders/plain.frag");
-
-	glUseProgram(plainProgram);
-	glUniform1i(glGetUniformLocation(plainProgram, "textureUnit"), TEX_UNIT);
-
-	glUseProgram(fullProgram);
-	glUniform1i(glGetUniformLocation(fullProgram, "textureUnit"), TEX_UNIT);
 }
 
 
@@ -89,18 +84,13 @@ void renderScene(void) {
 	mat4 cameraTransform = getProjectionViewMatrix((struct Camera *)&userCamera);
 	mat4 shadowMapTransform = getShadowMapTransform(lightTransform);
 
-	glUseProgram(plainProgram);
-	glActiveTexture(GL_TEXTURE0 + TEX_UNIT);
-	glBindTexture(GL_TEXTURE_2D, 0);
 	// 1. Render scene to FBO
 	useFBO(fbo, NULL, NULL);
-	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE); // Depth only
+	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	// Using the simple shader
 	drawPlain(modelLightPost, lightTransform, transLightPost);
-	//	drawModelInstanced(modelCube, transCubes, lightTransform);
-	glFlush();
+	drawModelInstanced(modelCube, transCubes, lightTransform);
 	printError("Draw me like one of your french girls");
 
 	// 2. Render from camera.
@@ -110,13 +100,10 @@ void renderScene(void) {
 
 	drawSkybox(cameraTransform);
 
-	glUseProgram(fullProgram);
-	glActiveTexture(GL_TEXTURE0 + TEX_UNIT);
-	glBindTexture(GL_TEXTURE_2D,fbo->depth);
+	glBindTexture(GL_TEXTURE_2D, fbo->depth);
 
 	drawFull(modelLightPost, cameraTransform, shadowMapTransform, transLightPost);
-
-	//	drawModelInstanced(modelCube, transCubes, cameraTransform);
+	drawModelInstanced(modelCube, transCubes, cameraTransform);
 	drawGroundWithProgram(fullProgram, cameraTransform, shadowMapTransform);
 	printError("Draw me like one of your italian girls");
 

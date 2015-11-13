@@ -16,7 +16,7 @@ void initializePlainShader(GLuint texUnit) {
 	glUniform1i(glGetUniformLocation(plainProgram, "textureUnit"), texUnit);
 	modelViewProjectionLocation =	glGetUniformLocation(plainProgram, "modelViewProjectionTransform");
 	shadeLocation = glGetUniformLocation(plainProgram, "shade");
-
+	glUniform1i(glGetUniformLocation(plainProgram, "textureUnit"), texUnit);
 }
 
 

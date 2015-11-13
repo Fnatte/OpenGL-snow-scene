@@ -6,5 +6,5 @@
 
 GLuint plainProgram;
 
-void initializePlainShader();
+void initializePlainShader(GLuint texUnit);
 void drawPlain(Model* m, mat4 modelViewProjectionTransform, mat4 modelTransform);
