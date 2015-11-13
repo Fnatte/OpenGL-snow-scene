@@ -98,8 +98,8 @@ void renderScene(void) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	// Using the simple shader
-	drawObjects(plainProgram, lightTransform, shadowMapTransform);
-	drawModelInstanced(modelCube, transCubes, lightTransform);
+	drawPlain(modelLightPost, lightTransform, transLightPost);
+	//	drawModelInstanced(modelCube, transCubes, lightTransform);
 	glFlush();
 	printError("Draw me like one of your french girls");
 
@@ -116,7 +116,7 @@ void renderScene(void) {
 
 	drawFull(modelLightPost, cameraTransform, shadowMapTransform, transLightPost);
 
-	drawModelInstanced(modelCube, transCubes, cameraTransform);
+	//	drawModelInstanced(modelCube, transCubes, cameraTransform);
 	drawGroundWithProgram(fullProgram, cameraTransform, shadowMapTransform);
 	printError("Draw me like one of your italian girls");
 
