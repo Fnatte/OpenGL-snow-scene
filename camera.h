@@ -13,7 +13,9 @@ struct Camera {
 struct ShakeableCamera {
 	struct Camera base;
 	struct Camera original;
-	float shakeElapsedTime;
+	float shakeTime;
+	vec3 shakeFrom;
+	vec3 shakeTo;
 };
 
 /**
@@ -65,7 +67,7 @@ struct ShakeableCamera createShakeableCamera(vec3 position, vec3 normal, vec3 ta
 /**
  * Introduce a camera shake with the specified magnitude.
  */
-void shakeCamera(struct ShakeableCamera *camera);
+void updateCameraShake(struct ShakeableCamera *camera);
 
 /**
  * Updates the specified camera based on the current mode.

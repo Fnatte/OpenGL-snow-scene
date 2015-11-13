@@ -16,6 +16,7 @@
 #include "camera.h"
 #include "content.h"
 #include "skybox.h"
+#include "full.h"
 #include "plain.h"
 
 
@@ -26,6 +27,7 @@ struct Camera pointLight;
 FBOstruct *fbo;
 mat4 transCubes;
 GLuint TEX_UNIT = 0;
+mat4 transLightPost;
 
 
 void reshapeViewport(GLsizei w, GLsizei h) {
@@ -53,10 +55,13 @@ void initPointLight() {
 
 
 void initShaders() {
-	fullProgram = loadShaders("shaders/full.vert", "shaders/full.frag");
-	initializePlainShader(TEX_UNIT);
+	initializeFullShader();
 	initializeInstancingShader(10);
 	initializeSkyboxShader();
+	plainProgram = loadShaders("shaders/plain.vert", "shaders/plain.frag");
+
+	glUseProgram(plainProgram);
+	glUniform1i(glGetUniformLocation(plainProgram, "textureUnit"), TEX_UNIT);
 
 	glUseProgram(fullProgram);
 	glUniform1i(glGetUniformLocation(fullProgram, "textureUnit"), TEX_UNIT);
@@ -73,31 +78,6 @@ mat4 getShadowMapTransform(mat4 modelViewProjectionTransform) {
 	// Scale and bias transform, moving from unit cube [-1,1] to [0,1]
 	mat4 scaleBiasMatrix = Mult(T(0.5, 0.5, 0.0), S(0.5, 0.5, 1.0));
 	return Mult(scaleBiasMatrix, modelViewProjectionTransform);
-}
-
-
-void loadObjects(void) {
-	transCubes = T(-10, 100, -10);
-}
-
-
-void drawObjects(GLuint program, mat4 modelViewProjectionTransform, mat4 shadowMapTransform) {
-  mat4 mv2, tx2, trans;
-
-	drawGroundWithProgram(program, modelViewProjectionTransform, shadowMapTransform);
-
-
-	// The cube
-	trans = Mult(T(0,4,-5), S(5.0, 5.0, 5.0));
-	mv2 = Mult(modelViewProjectionTransform, trans); // Apply on both
-	tx2 = Mult(shadowMapTransform, trans);
-	if (program == fullProgram) {
-		glUniform1f(glGetUniformLocation(program, "shade"), 0.9);
-		glUniformMatrix4fv(glGetUniformLocation(program, "shadowMapTransform"), 1, GL_TRUE, tx2.m);
-	}
-	glUniformMatrix4fv(glGetUniformLocation(program, "modelViewProjectionTransform"), 1, GL_TRUE, mv2.m);
-	DrawModel(modelCube, program, "inPosition", NULL, NULL);
-	drawPlain2(modelLightPost, modelViewProjectionTransform);
 }
 
 
@@ -127,7 +107,6 @@ void renderScene(void) {
 	useFBO(NULL, fbo, NULL);
 	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glCullFace(GL_BACK);
 
 	drawSkybox(cameraTransform);
 
@@ -135,12 +114,11 @@ void renderScene(void) {
 	glActiveTexture(GL_TEXTURE0 + TEX_UNIT);
 	glBindTexture(GL_TEXTURE_2D,fbo->depth);
 
-	glCullFace(GL_BACK);
-	drawObjects(fullProgram, cameraTransform, shadowMapTransform);
-	drawModelInstanced(modelCube, transCubes, cameraTransform);
-	printError("Draw me like one of your italian girls");
+	drawFull(modelLightPost, cameraTransform, shadowMapTransform, transLightPost);
 
-	drawPlain(modelLightPost, cameraTransform, T(0,0,0));
+	drawModelInstanced(modelCube, transCubes, cameraTransform);
+	drawGroundWithProgram(fullProgram, cameraTransform, shadowMapTransform);
+	printError("Draw me like one of your italian girls");
 
 	glutSwapBuffers();
 }
@@ -179,15 +157,18 @@ int main(int argc, char** argv) {
 	fbo = initFBO2(FBO_RES, FBO_RES, 0, 1);
 	initShaders();
 	loadContent();
-	loadObjects();
 	initUserCamera();
 	initPointLight();
 	initKeymapManager();
 	initializeGround(modelPlane, fullProgram);
 
+	transCubes = T(-20, 100, -20);
+	transLightPost =  S(5.0, 5.0, 5.0);
+
 	glEnable(GL_DEPTH_TEST);
 	glClearColor(0,0,0,1.0f);
 	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
 
 	glutDisplayFunc(renderScene);
 	glutTimerFunc(16, &onTimer, 0);

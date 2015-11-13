@@ -30,7 +30,7 @@ void main()
 
 	if (lightSourceCoord.w > 0.0)
 		if (distanceFromLight < shadowCoordinateWdivide.z) // shadow
-			shadow = 0.5;
+			shadow = 0.2;
 	out_Color = vec4(shadow * shade);
 
 }

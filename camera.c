@@ -4,6 +4,7 @@
 #include "./libraries/GLUtilities.h"
 #include "./libraries/VectorUtils3.h"
 #include "camera.h"
+#include "utilities.h"
 
 #define MODE_MOVIE 0
 #define MODE_INTERACTIVE 1
@@ -12,17 +13,33 @@ int currentMode = MODE_MOVIE;
 
 int wasModeKeyDown = 0;
 
+static void resetShake(struct ShakeableCamera *c) {
+		static const float offsetMagnitude = 5;
+		vec3 offset = ScalarMult(
+			VectorSub(getRandVec3(0, 2), SetVector(1, 1, 1)),
+			offsetMagnitude
+		);
+		c->shakeTo = VectorAdd(c->original.target, offset);
+		c->shakeFrom = c->base.target;
+		c->shakeTime = 0;
+}
+
 struct Camera createCamera(vec3 position, vec3 normal, vec3 target) {
 	struct Camera c = (struct Camera) { position, normal, target, IdentityMatrix() };
 	return c;
 }
 
 struct ShakeableCamera createShakeableCamera(vec3 position, vec3 normal, vec3 target) {
-	return (struct ShakeableCamera) {
+	struct ShakeableCamera c = (struct ShakeableCamera) {
 		createCamera(position, normal, target),
 		createCamera(position, normal, target),
-		0
+		0,
+		SetVector(0, 0, 0),
+		SetVector(0, 0, 0)
 	};
+	resetShake(&c);
+
+	return c;
 }
 
 void updateCamera(struct ShakeableCamera *c) {
@@ -37,7 +54,7 @@ void updateCamera(struct ShakeableCamera *c) {
 		if(currentMode == MODE_MOVIE) {
 			c->original.target = c->base.target;
 			c->original.position = c->base.position;
-			c->shakeElapsedTime = 0;
+			resetShake(c);
 		}
 
 	}
@@ -45,10 +62,9 @@ void updateCamera(struct ShakeableCamera *c) {
 
 
 	// Modify camera state
-	c->shakeElapsedTime += 1;
 	switch(currentMode) {
 		case MODE_MOVIE:
-			shakeCamera(c);
+			updateCameraShake(c);
 			break;
 		case MODE_INTERACTIVE:
 			moveCameraOnKeyboard((struct Camera *) c);
@@ -105,14 +121,20 @@ void moveCameraOnKeyboard(struct Camera *c) {
 	printError("moveonkeyinputrelativecamera()");
 }
 
-void shakeCamera(struct ShakeableCamera *c) {
-	vec3 offset = SetVector(
-		sin(c->shakeElapsedTime * 0.25) * 0.5,
-		0, 
-		cos(c->shakeElapsedTime * 0.35) * 0.15
-	);
+void updateCameraShake(struct ShakeableCamera *c) {
+	c->shakeTime += 0.0015;
 
-	c->base.target = VectorAdd(c->original.target, offset);
+	// Check if we have reached the goal
+	if(c->shakeTime >= 1) {
+		resetShake(c);
+	}
+
+	// Take a step towards the goal (bezier blend)
+	vec3 targetDiff = VectorSub(c->shakeTo, c->shakeFrom);
+	float t = c->shakeTime;
+	float step = (t*t) * (3.0f - 2*t);
+	c->base.target = VectorAdd(c->shakeFrom, ScalarMult(targetDiff, step));
+	
 }
 
 void rotateCameraByMouse(struct Camera *c, int x, int y) {
