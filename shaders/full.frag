@@ -1,8 +1,9 @@
 #version 150
 
 in vec4 lightSourceCoord;
-uniform sampler2D textureUnit;
-uniform float shade;
+uniform sampler2D material;
+uniform sampler2D normalMap;
+uniform sampler2D shadowMap;
 out vec4 out_Color;
 
 void main()
@@ -15,7 +16,7 @@ void main()
 	shadowCoordinateWdivide.z -= 0.002;
 
 	// Look up the depth value
-	float distanceFromLight = texture(textureUnit, shadowCoordinateWdivide.st).x;
+	float distanceFromLight = texture(shadowMap, shadowCoordinateWdivide.st).x;
 	distanceFromLight = (distanceFromLight-0.5) * 2.0;
 
 	// NOTE: This distance look-up disturbs me. It is too simple. It should really
@@ -31,6 +32,6 @@ void main()
 	if (lightSourceCoord.w > 0.0)
 		if (distanceFromLight < shadowCoordinateWdivide.z) // shadow
 			shadow = 0.2;
-	out_Color = vec4(shadow * shade);
+	out_Color = vec4(shadow * 0.9);
 
 }

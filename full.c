@@ -1,4 +1,5 @@
 #include <GL/glew.h>
+#include <assert.h>
 
 #include "libraries/GLUtilities.h"
 
@@ -6,33 +7,55 @@
 #include "utilities.h"
 
 
-static GLuint positionLocation = 0;
-static GLuint normalLocation   = 1;
-static GLuint textureLocation  = 2;
+static GLint positionLocation = 0;
+static GLint normalLocation   = 1;
+static GLint textureLocation  = 2;
 
-static GLuint modelViewProjectionLocation;
-static GLuint shadowMapLocation;
-static GLuint shadeLocation;
+static GLint modelViewProjectionLocation;
+static GLint shadowMapTransformLocation;
+
+static GLint materialLocation;
+static GLint normalMapLocation;
+static GLint shadowMapLocation;
 
 
-void initializeFullShader(GLuint texUnit) {
+void initializeFullShader() {
 	fullProgram = loadShaders("shaders/full.vert", "shaders/full.frag");
-	modelViewProjectionLocation =	glGetUniformLocation(fullProgram, "modelViewProjectionTransform");
-	shadowMapLocation = glGetUniformLocation(fullProgram, "shadowMapTransform");
-	shadeLocation = glGetUniformLocation(fullProgram, "shade");
-	glUniform1i(glGetUniformLocation(fullProgram, "textureUnit"), texUnit);
+
+	modelViewProjectionLocation = glGetUniformLocation(fullProgram, "modelViewProjectionTransform");
+	shadowMapTransformLocation = glGetUniformLocation(fullProgram, "shadowMapTransform");
+	materialLocation = glGetUniformLocation(fullProgram, "material");
+	normalMapLocation = glGetUniformLocation(fullProgram, "normalMap");
+	shadowMapLocation = glGetUniformLocation(fullProgram, "shadowMap");
+
+	assert(modelViewProjectionLocation >= 0);
+	assert(shadowMapTransformLocation >= 0);
+	assert(textureLocation >= 0);
+	// assert(materialLocation >= 0);
+	// assert(normalMapLocation >= 0);
+	assert(shadowMapLocation >= 0);
+
+	glUseProgram(fullProgram);
+	glUniform1i(materialLocation, 0);
+	glUniform1i(normalMapLocation, 2);
+	glUniform1i(shadowMapLocation, 4);
 }
 
 
-void drawFull(Model *m, mat4 modelViewProjectionTransform, mat4 shadowMapTransform, mat4 modelTransform, GLfloat shade) {
+void drawFull(Model *m, mat4 modelViewProjectionTransform, mat4 shadowMapTransform, mat4 modelTransform, GLuint texture, GLuint shadowMap) {
 	modelViewProjectionTransform = Mult(modelViewProjectionTransform, modelTransform);
 	shadowMapTransform = Mult(shadowMapTransform, modelTransform);
+
+	// Bind textures
+	glActiveTexture(GL_TEXTURE0 + 0);
+	glBindTexture(GL_TEXTURE_2D, texture);
+	glActiveTexture(GL_TEXTURE0 + 4);
+	glBindTexture(GL_TEXTURE_2D, shadowMap);
 
 	glUseProgram(fullProgram);
 
 	glUniformMatrix4fv(modelViewProjectionLocation, 1, GL_TRUE, modelViewProjectionTransform.m);
-		glUniformMatrix4fv(shadowMapLocation, 1, GL_TRUE, shadowMapTransform.m);
-	glUniform1f(shadeLocation, shade);
+	glUniformMatrix4fv(shadowMapTransformLocation, 1, GL_TRUE, shadowMapTransform.m);
 
 	// Vertex positions.
 	glBindVertexArray(m->vao);

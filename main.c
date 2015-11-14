@@ -21,13 +21,10 @@
 
 #define FBO_RES 2048
 
-
 struct Camera pointLight;
 FBOstruct *fbo;
 mat4 transCubes;
 mat4 transLightPost;
-GLuint TEX_UNIT = 0;
-
 
 void reshapeViewport(GLsizei w, GLsizei h) {
 	glViewport(0, 0, w, h);
@@ -54,8 +51,8 @@ void initPointLight() {
 
 
 void initShaders() {
-	initializeFullShader(TEX_UNIT);
-	initializePlainShader(TEX_UNIT);
+	initializeFullShader();
+	initializePlainShader();
 	initializeInstancingShader(10);
 	initializeSkyboxShader();
 }
@@ -98,10 +95,9 @@ void renderScene(void) {
 
 	drawSkybox(cameraTransform);
 
-	glBindTexture(GL_TEXTURE_2D, fbo->depth);
-	drawFull(modelLightPost, cameraTransform, shadowMapTransform, transLightPost, 0.9);
+	drawFull(modelLightPost, cameraTransform, shadowMapTransform, transLightPost, 0, fbo->depth);
 	drawModelInstanced(modelCube, transCubes, cameraTransform);
-	drawFull(modelPlane, cameraTransform, shadowMapTransform, T(0,0,0), 0.5);
+	drawFull(modelPlane, cameraTransform, shadowMapTransform, T(0,0,0), 0, fbo->depth);
 	printError("Draw me like one of your italian girls");
 	glutSwapBuffers();
 }
