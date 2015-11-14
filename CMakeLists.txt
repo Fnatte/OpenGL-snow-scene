@@ -15,12 +15,12 @@ add_subdirectory (libraries)
 add_executable ( Projekt
 	main.c
 	instancing.c
-	ground.c
 	camera.c
 	utilities.c
 	content.c
 	skybox.c
 	full.c
+	plain.c
 	shaders/instancing.vert
 	shaders/instancing.frag
 	shaders/skybox.vert

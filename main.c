@@ -12,26 +12,28 @@
 
 #include "main.h"
 #include "instancing.h"
-#include "ground.h"
 #include "camera.h"
 #include "content.h"
 #include "skybox.h"
 #include "full.h"
+#include "plain.h"
 
-#define TEX_UNIT 0
-#define FBO_RES 512
+
+#define FBO_RES 2048
 
 
 struct Camera pointLight;
 FBOstruct *fbo;
 mat4 transCubes;
 mat4 transLightPost;
+GLuint TEX_UNIT = 0;
 
 
 void reshapeViewport(GLsizei w, GLsizei h) {
 	glViewport(0, 0, w, h);
 	userCamera.base.projection = perspective(90, 1.0*w/h, 0.1, 1000);
 }
+
 
 void initUserCamera() {
 	vec3 position = (vec3){1.5f, 20.0f, -50.0f};
@@ -52,16 +54,10 @@ void initPointLight() {
 
 
 void initShaders() {
-	initializeFullShader();
+	initializeFullShader(TEX_UNIT);
+	initializePlainShader(TEX_UNIT);
 	initializeInstancingShader(10);
 	initializeSkyboxShader();
-	plainProgram = loadShaders("shaders/plain.vert", "shaders/plain.frag");
-
-	glUseProgram(plainProgram);
-	glUniform1i(glGetUniformLocation(plainProgram, "textureUnit"), TEX_UNIT);
-
-	glUseProgram(fullProgram);
-	glUniform1i(glGetUniformLocation(plainProgram, "textureUnit"), TEX_UNIT);
 }
 
 
@@ -69,6 +65,7 @@ void rotateLight(void) {
 	pointLight.position.x = 30.0 * -cos(glutGet(GLUT_ELAPSED_TIME)/10000.0);
 	pointLight.position.z = 30.0 * -sin(glutGet(GLUT_ELAPSED_TIME)/10000.0);
 }
+
 
 mat4 getShadowMapTransform(mat4 modelViewProjectionTransform) {
 	// Scale and bias transform, moving from unit cube [-1,1] to [0,1]
@@ -85,18 +82,13 @@ void renderScene(void) {
 	mat4 cameraTransform = getProjectionViewMatrix((struct Camera *)&userCamera);
 	mat4 shadowMapTransform = getShadowMapTransform(lightTransform);
 
-	glUseProgram(plainProgram);
-	glActiveTexture(GL_TEXTURE0 + TEX_UNIT);
-	glBindTexture(GL_TEXTURE_2D, 0);
 	// 1. Render scene to FBO
 	useFBO(fbo, NULL, NULL);
-	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE); // Depth only
+	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-
-	drawFull(modelLightPost, lightTransform, shadowMapTransform, transLightPost);
+	drawPlain(modelLightPost, lightTransform, transLightPost);
 	drawModelInstanced(modelCube, transCubes, lightTransform);
-	glFlush();
 	printError("Draw me like one of your french girls");
 
 	// 2. Render from camera.
@@ -106,16 +98,11 @@ void renderScene(void) {
 
 	drawSkybox(cameraTransform);
 
-	glUseProgram(fullProgram);
-	glActiveTexture(GL_TEXTURE0 + TEX_UNIT);
-	glBindTexture(GL_TEXTURE_2D,fbo->depth);
-
-	drawFull(modelLightPost, cameraTransform, shadowMapTransform, transLightPost);
-
+	glBindTexture(GL_TEXTURE_2D, fbo->depth);
+	drawFull(modelLightPost, cameraTransform, shadowMapTransform, transLightPost, 0.9);
 	drawModelInstanced(modelCube, transCubes, cameraTransform);
-	drawGroundWithProgram(fullProgram, cameraTransform, shadowMapTransform);
+	drawFull(modelPlane, cameraTransform, shadowMapTransform, T(0,0,0), 0.5);
 	printError("Draw me like one of your italian girls");
-
 	glutSwapBuffers();
 }
 
@@ -136,7 +123,7 @@ int main(int argc, char** argv) {
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
 	glutInitContextVersion(3, 1);
-	glutCreateWindow("Shadow mapping demo");
+	glutCreateWindow("Let it Snow!");
 	glutPassiveMotionFunc(handleMouse);
 	glutReshapeFunc(reshapeViewport);
 
@@ -156,7 +143,6 @@ int main(int argc, char** argv) {
 	initUserCamera();
 	initPointLight();
 	initKeymapManager();
-	initializeGround(modelPlane, fullProgram);
 
 	transCubes = T(-20, 100, -20);
 	transLightPost =  S(5.0, 5.0, 5.0);
