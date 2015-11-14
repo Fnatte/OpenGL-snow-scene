@@ -72,3 +72,6 @@ tramp
 
 # cask packages
 .cask/
+
+# idea
+.idea/

@@ -30,7 +30,7 @@ mat4 transLightPost;
 
 void reshapeViewport(GLsizei w, GLsizei h) {
 	glViewport(0, 0, w, h);
-	userCamera.base.projection = perspective(90, w/h, 0.1, 1000);
+	userCamera.base.projection = perspective(90, 1.0*w/h, 0.1, 1000);
 }
 
 void initUserCamera() {
