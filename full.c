@@ -10,29 +10,29 @@ static GLuint positionLocation = 0;
 static GLuint normalLocation   = 1;
 static GLuint textureLocation  = 2;
 
-static GLuint modelViewProjectionLocation;
+static GLuint cameraLocation;
+static GLuint modelLocation;
 static GLuint shadowMapLocation;
-static GLuint shadeLocation;
 
 
 void initializeFullShader(GLuint texUnit) {
 	fullProgram = loadShaders("shaders/full.vert", "shaders/full.frag");
-	modelViewProjectionLocation =	glGetUniformLocation(fullProgram, "modelViewProjectionTransform");
-	shadowMapLocation = glGetUniformLocation(fullProgram, "shadowMapTransform");
-	shadeLocation = glGetUniformLocation(fullProgram, "shade");
+	cameraLocation =	glGetUniformLocation(fullProgram, "camera");
+	modelLocation =	glGetUniformLocation(fullProgram, "model");
+	shadowMapLocation = glGetUniformLocation(fullProgram, "shadowMap");
 	glUniform1i(glGetUniformLocation(fullProgram, "textureUnit"), texUnit);
 }
 
 
-void drawFull(Model *m, mat4 modelViewProjectionTransform, mat4 shadowMapTransform, mat4 modelTransform, GLfloat shade) {
-	modelViewProjectionTransform = Mult(modelViewProjectionTransform, modelTransform);
-	shadowMapTransform = Mult(shadowMapTransform, modelTransform);
+void drawFull(Model *m, mat4 cameraTransform, mat4 modelTransform, mat4 shadowMapTransform) {
+	mat4 mvpTransform = Mult(cameraTransform, modelTransform);
+	mat4 shadowMapModelTransform = Mult(shadowMapTransform, modelTransform);
 
 	glUseProgram(fullProgram);
 
-	glUniformMatrix4fv(modelViewProjectionLocation, 1, GL_TRUE, modelViewProjectionTransform.m);
-		glUniformMatrix4fv(shadowMapLocation, 1, GL_TRUE, shadowMapTransform.m);
-	glUniform1f(shadeLocation, shade);
+	glUniformMatrix4fv(cameraLocation, 1, GL_TRUE, mvpTransform.m);
+	glUniformMatrix4fv(modelLocation, 1, GL_TRUE, modelTransform.m);
+	glUniformMatrix4fv(shadowMapLocation, 1, GL_TRUE, shadowMapModelTransform.m);
 
 	// Vertex positions.
 	glBindVertexArray(m->vao);

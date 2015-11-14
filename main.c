@@ -24,14 +24,14 @@
 
 struct Camera pointLight;
 FBOstruct *fbo;
-mat4 transCubes;
-mat4 transLightPost;
+mat4 cubesTransform;
+mat4 lightPostTransform;
 GLuint TEX_UNIT = 0;
 
 
 void reshapeViewport(GLsizei w, GLsizei h) {
 	glViewport(0, 0, w, h);
-	userCamera.base.projection = perspective(90, 1.0*w/h, 0.1, 1000);
+	userCamera.base.projection = perspective(90, 1.0 * w / h, 0.1, 1000);
 }
 
 
@@ -87,8 +87,8 @@ void renderScene(void) {
 	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	drawPlain(modelLightPost, lightTransform, transLightPost);
-	drawModelInstanced(modelCube, transCubes, lightTransform);
+	drawPlain(modelLightPost, lightTransform, lightPostTransform);
+	drawModelInstanced(modelCube, cubesTransform, lightTransform);
 	printError("Draw me like one of your french girls");
 
 	// 2. Render from camera.
@@ -99,9 +99,9 @@ void renderScene(void) {
 	drawSkybox(cameraTransform);
 
 	glBindTexture(GL_TEXTURE_2D, fbo->depth);
-	drawFull(modelLightPost, cameraTransform, shadowMapTransform, transLightPost, 0.9);
-	drawModelInstanced(modelCube, transCubes, cameraTransform);
-	drawFull(modelPlane, cameraTransform, shadowMapTransform, T(0,0,0), 0.5);
+	drawFull(modelLightPost, cameraTransform, lightPostTransform, shadowMapTransform);
+	drawModelInstanced(modelCube, cubesTransform, cameraTransform);
+	drawFull(modelPlane, cameraTransform, T(0,0,0), shadowMapTransform);
 	printError("Draw me like one of your italian girls");
 	glutSwapBuffers();
 }
@@ -144,8 +144,8 @@ int main(int argc, char** argv) {
 	initPointLight();
 	initKeymapManager();
 
-	transCubes = T(-20, 100, -20);
-	transLightPost =  S(5.0, 5.0, 5.0);
+	cubesTransform = T(-20, 100, -20);
+	lightPostTransform =  S(2.5, 2.5, 2.5);
 
 	glEnable(GL_DEPTH_TEST);
 	glClearColor(0,0,0,1.0f);

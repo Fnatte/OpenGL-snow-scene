@@ -6,12 +6,21 @@ layout (location = 1) in vec3 normal;
 layout (location = 2) in vec2 textureCoordinates;
 
 uniform mat4 shadowMapTransform;
-uniform mat4 modelViewProjectionTransform;
+uniform mat4 camera;
+uniform mat4 model;
 
 out vec4 lightSourceCoord;
+out vec2 fragTexCoord;
+out vec3 fragPosition;
+out vec3 fragNormal;
 
 void main() {
 	// Transform vertex to light source coordinates
 	lightSourceCoord = shadowMapTransform * vec4(inPosition, 1.0);
-	gl_Position = modelViewProjectionTransform * vec4(inPosition, 1.0);
+	gl_Position = camera * model * vec4(inPosition, 1.0);
+
+	// Pass to fragment shader
+	fragTexCoord = textureCoordinates;
+	fragPosition = inPosition;
+	fragNormal = normal;
 }
