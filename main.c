@@ -95,8 +95,7 @@ void renderScene(void) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	drawSkybox(cameraTransform);
-	// The light post model crashes the full-shader because it doesn't have texture coordinates.
-	// drawFull(modelLightPost, cameraTransform, lightPostTransform, shadowMapTransform, 0, fbo->depth);
+	drawFull(modelLightPost, cameraTransform, lightPostTransform, shadowMapTransform, 0, fbo->depth);
 	drawModelInstanced(modelCube, cubesTransform, cameraTransform);
 	drawFull(modelPlane, cameraTransform, T(0,0,0), shadowMapTransform, textureGroundDiffuse, fbo->depth);
 
