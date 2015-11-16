@@ -45,10 +45,10 @@ void initializeFullShader() {
 
 	assert(cameraLocation >= 0);
 	assert(modelLocation >= 0);
-	// assert(shadowMapTransformLocation >= 0);
+	assert(shadowMapTransformLocation >= 0);
 	assert(materialLocation >= 0);
-	// assert(normalMapLocation >= 0);
-	// assert(shadowMapLocation >= 0);
+	// assert(normalMapLocation >= 0); Not used yet
+	assert(shadowMapLocation >= 0);
 
 	glUseProgram(fullProgram);
 	glUniform1i(materialLocation, 0);
