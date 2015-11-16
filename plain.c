@@ -1,4 +1,5 @@
 #include <GL/glew.h>
+#include <assert.h>
 
 #include "plain.h"
 #include "utilities.h"
@@ -7,16 +8,14 @@
 static GLuint positionLocation = 0;
 
 static GLuint modelViewProjectionLocation;
-static GLuint shadeLocation;
 
 
-void initializePlainShader(GLuint texUnit) {
+void initializePlainShader() {
 	plainProgram = loadShaders("shaders/plain.vert", "shaders/plain.frag");
-	glUseProgram(plainProgram);
-	glUniform1i(glGetUniformLocation(plainProgram, "textureUnit"), texUnit);
-	modelViewProjectionLocation =	glGetUniformLocation(plainProgram, "modelViewProjectionTransform");
-	shadeLocation = glGetUniformLocation(plainProgram, "shade");
-	glUniform1i(glGetUniformLocation(plainProgram, "textureUnit"), texUnit);
+
+	modelViewProjectionLocation = glGetUniformLocation(plainProgram, "modelViewProjectionTransform");
+
+	assert(modelViewProjectionLocation >= 0);
 }
 
 

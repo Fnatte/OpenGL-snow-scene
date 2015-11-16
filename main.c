@@ -17,17 +17,17 @@
 #include "skybox.h"
 #include "full.h"
 #include "plain.h"
+#include "light.h"
 
 
 #define FBO_RES 2048
 
-
 struct Camera pointLight;
+struct Light light;
 FBOstruct *fbo;
+
 mat4 cubesTransform;
 mat4 lightPostTransform;
-GLuint TEX_UNIT = 0;
-
 
 void reshapeViewport(GLsizei w, GLsizei h) {
 	glViewport(0, 0, w, h);
@@ -50,12 +50,23 @@ void initPointLight() {
 	vec3 normal = CrossProduct(position, target);
 	pointLight = createCamera(position, normal, target);
 	pointLight.projection = perspective(90, 1, 10, 4000);
+
+	light = (struct Light){
+		.position = position,
+		.coneDirection = VectorSub(target, position),
+		.coneAngle = 45,
+		.attenuation = 1.0f,
+		.ambientCoefficient = 1.0f,
+		.intensities = (vec3){1.0f, 1.0f, 1.0f}
+	};
+
+	setLight(&light);
 }
 
 
 void initShaders() {
-	initializeFullShader(TEX_UNIT);
-	initializePlainShader(TEX_UNIT);
+	initializeFullShader();
+	initializePlainShader();
 	initializeInstancingShader(10);
 	initializeSkyboxShader();
 }
@@ -97,11 +108,10 @@ void renderScene(void) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	drawSkybox(cameraTransform);
-
-	glBindTexture(GL_TEXTURE_2D, fbo->depth);
-	drawFull(modelLightPost, cameraTransform, lightPostTransform, shadowMapTransform);
+	drawFull(modelLightPost, cameraTransform, lightPostTransform, shadowMapTransform, 0, fbo->depth);
 	drawModelInstanced(modelCube, cubesTransform, cameraTransform);
-	drawFull(modelPlane, cameraTransform, T(0,0,0), shadowMapTransform);
+	drawFull(modelPlane, cameraTransform, T(0,0,0), shadowMapTransform, textureGroundDiffuse, fbo->depth);
+
 	printError("Draw me like one of your italian girls");
 	glutSwapBuffers();
 }

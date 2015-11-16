@@ -7,12 +7,14 @@ in vec3 fragNormal;
 
 uniform vec3 cameraPosition;
 uniform mat4 model;
-uniform sampler2D shadowMap;
 uniform sampler2D material;
+uniform sampler2D normalMap;
+uniform sampler2D shadowMap;
+
 out vec4 out_Color;
 
 uniform struct Light {
-    vec4 position;
+    vec3 position;
     vec3 intensities;
     float attenuation;
     float ambientCoefficient;
@@ -24,8 +26,8 @@ vec3 ApplyLight(Light light, vec3 surfaceColor, vec3 normal, vec3 surfacePos, ve
     float materialShininess = 1.0;
     vec3 materialSpecularColor = vec3(1, 1, 1);
 
-    vec3 surfaceToLight = normalize(light.position.xyz - surfacePos);
-    float distanceToLight = length(light.position.xyz - surfacePos);
+    vec3 surfaceToLight = normalize(light.position - surfacePos);
+    float distanceToLight = length(light.position - surfacePos);
     float attenuation = 1.0 / (1.0 + light.attenuation * pow(distanceToLight, 2));
 
    // Cone restrictions
@@ -54,7 +56,7 @@ float GetShadow() {
     shadowCoordinateWdivide.z -= 0.002;
 
     // Look up the depth value
-    float distanceFromLight = texture(textureUnit, shadowCoordinateWdivide.st).x;
+    float distanceFromLight = texture(shadowMap, shadowCoordinateWdivide.st).x;
     distanceFromLight = (distanceFromLight-0.5) * 2.0;
 
     // NOTE: This distance look-up disturbs me. It is too simple. It should really
@@ -79,13 +81,11 @@ void main()
     vec3 normal = normalize(transpose(inverse(mat3(model))) * fragNormal);
 
     vec3 surfacePos = vec3(model * vec4(fragPosition, 1));
-    vec4 surfaceColor = texture(material, fragTexCoord);
-    //vec3 surfaceToCamera = normalize(cameraPosition - surfacePos);
+    vec4 surfaceColor = material != 0 ? texture(material, fragTexCoord) : vec3(1, 1, 1);
+    vec3 surfaceToCamera = normalize(cameraPosition - surfacePos);
 
-    out_Color = surfaceColor;
-
-//	out_Color = vec4(
-//        vec3(1, 1, 1), //ApplyLight(light, surfaceColor.rgb, normal, surfacePos, surfaceToCamera),
-//        surfaceColor.a
-//    );
+	out_Color = vec4(
+        ApplyLight(light, surfaceColor.rgb, normal, surfacePos, surfaceToCamera),
+        surfaceColor.a
+    );
 }
