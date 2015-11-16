@@ -9,11 +9,13 @@ Model *modelCube;
 Model *modelPlane;
 Model *modelSkybox;
 Model *modelLightPost;
+Model *modelSnow;
 
 GLuint textureGroundDiffuse;
 GLuint textureGroundSpecular;
 GLuint textureGroundNormal;
 GLuint textureSkybox;
 GLuint textureMetal;
+GLuint textureSnow;
 
 void loadContent();

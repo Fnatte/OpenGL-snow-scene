@@ -70,7 +70,6 @@ void setLight(struct Light *_light) {
 }
 
 void drawFull(Model *m, mat4 cameraTransform, mat4 modelTransform, mat4 shadowMapTransform, GLuint texture, GLuint shadowMap) {
-	mat4 mvpTransform = Mult(cameraTransform, modelTransform);
 	mat4 shadowMapModelTransform = Mult(shadowMapTransform, modelTransform);
 
 	// Bind textures
@@ -81,7 +80,7 @@ void drawFull(Model *m, mat4 cameraTransform, mat4 modelTransform, mat4 shadowMa
 
 	glUseProgram(fullProgram);
 
-	glUniformMatrix4fv(cameraLocation, 1, GL_TRUE, mvpTransform.m);
+	glUniformMatrix4fv(cameraLocation, 1, GL_TRUE, cameraTransform.m);
 	glUniformMatrix4fv(modelLocation, 1, GL_TRUE, modelTransform.m);
 	glUniformMatrix4fv(shadowMapTransformLocation, 1, GL_TRUE, shadowMapModelTransform.m);
 

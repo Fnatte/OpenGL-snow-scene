@@ -86,7 +86,7 @@ void renderScene(void) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	drawPlain(modelLightPost, lightTransform, lightPostTransform);
-	drawModelInstanced(modelCube, cubesTransform, lightTransform);
+	drawModelInstanced(modelSnow, lightTransform, cubesTransform, shadowMapTransform, textureSnow, fbo->depth, &pointLight);
 	printError("Draw me like one of your french girls");
 
 	// 2. Render from camera.
@@ -96,7 +96,7 @@ void renderScene(void) {
 
 	drawSkybox(cameraTransform);
 	drawFull(modelLightPost, cameraTransform, lightPostTransform, shadowMapTransform, textureMetal, fbo->depth);
-	drawModelInstanced(modelCube, cubesTransform, cameraTransform);
+	drawModelInstanced(modelSnow, cameraTransform, cubesTransform, shadowMapTransform, textureSnow, fbo->depth, &pointLight);
 	drawFull(modelPlane, cameraTransform, T(0,0,0), shadowMapTransform, textureGroundDiffuse, fbo->depth);
 
 	printError("Draw me like one of your italian girls");
@@ -141,8 +141,8 @@ int main(int argc, char** argv) {
 	initPointLight();
 	initKeymapManager();
 
-	cubesTransform = T(-20, 100, -20);
-	lightPostTransform =  S(2.5, 2.5, 2.5);
+	cubesTransform = T(-10, 50, -10);
+	lightPostTransform =  S(5, 5, 5);
 
 	glEnable(GL_DEPTH_TEST);
 	glClearColor(0,0,0,1.0f);
