@@ -4,9 +4,6 @@
 #include "libraries/GLUtilities.h"
 
 #include "full.h"
-#include "utilities.h"
-#include "light.h"
-
 
 static GLuint positionLocation = 0;
 static GLuint normalLocation   = 1;
@@ -28,15 +25,6 @@ static GLint lightConeAngleLocation;
 static GLint lightConeDirectionLocation;
 
 static struct Light *light;
-
-static void setLightUniform(struct Light *light) {
-	glUniform3f(lightPositionLocation, light->position.x, light->position.y, light->position.z);
-	glUniform3f(lightIntensitiesLocation, light->intensities.x, light->intensities.y, light->intensities.z);
-	glUniform3f(lightConeDirectionLocation, light->coneDirection.x, light->coneDirection.y, light->coneDirection.z);
-	glUniform1f(lightAttenuationLocation, light->attenuation);
-	glUniform1f(lightAmbientCoefficientLocation, light->ambientCoefficient);
-	glUniform1f(lightConeAngleLocation, light->coneAngle);
-}
 
 void initializeFullShader() {
 	fullProgram = loadShaders("shaders/full.vert", "shaders/full.frag");
@@ -68,6 +56,15 @@ void initializeFullShader() {
 	glUniform1i(shadowMapLocation, 4);
 }
 
+static void setLightUniform(struct ShaderLight *light) {
+	glUniform3f(lightPositionLocation, light->position.x, light->position.y, light->position.z);
+	glUniform3f(lightIntensitiesLocation, light->intensities.x, light->intensities.y, light->intensities.z);
+	glUniform3f(lightConeDirectionLocation, light->coneDirection.x, light->coneDirection.y, light->coneDirection.z);
+	glUniform1f(lightAttenuationLocation, light->attenuation);
+	glUniform1f(lightAmbientCoefficientLocation, light->ambientCoefficient);
+	glUniform1f(lightConeAngleLocation, light->coneAngle);
+}
+
 void setLight(struct Light *_light) {
 	light = _light;
 }
@@ -89,7 +86,8 @@ void drawFull(Model *m, mat4 cameraTransform, mat4 modelTransform, mat4 shadowMa
 	glUniformMatrix4fv(shadowMapTransformLocation, 1, GL_TRUE, shadowMapModelTransform.m);
 
 	// Set light uniform
-	setLightUniform(light);
+	struct ShaderLight shaderLight = getShaderLight(light);
+	setLightUniform(&shaderLight);
 
 	// Vertex positions.
 	glBindVertexArray(m->vao);

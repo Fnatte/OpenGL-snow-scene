@@ -81,11 +81,11 @@ void main()
     vec3 normal = normalize(transpose(inverse(mat3(model))) * fragNormal);
 
     vec3 surfacePos = vec3(model * vec4(fragPosition, 1));
-    vec4 surfaceColor = material != 0 ? texture(material, fragTexCoord) : vec3(1, 1, 1);
+    vec4 surfaceColor = texture(material, fragTexCoord);
     vec3 surfaceToCamera = normalize(cameraPosition - surfacePos);
 
 	out_Color = vec4(
-        ApplyLight(light, surfaceColor.rgb, normal, surfacePos, surfaceToCamera),
+        GetShadow() * ApplyLight(light, surfaceColor.rgb, normal, surfacePos, surfaceToCamera),
         surfaceColor.a
     );
 }

@@ -13,8 +13,7 @@ struct ShakeableCamera userCamera;
 
 void reshapeViewport(GLsizei w, GLsizei h);
 void initUserCamera();
-void initpointLight();
-void rotateLight();
+void initPointLight();
 mat4 getShadowMapTransform(mat4 modelViewProjectionTransform);
 void renderScene(void);
 void handleMouse(int x, int y);

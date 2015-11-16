@@ -5,25 +5,20 @@
 #include <stdlib.h>
 #include <math.h>
 
-#include "libraries/LoadTGA.h"
 #include "libraries/VectorUtils3.h"
 #include "libraries/GLUtilities.h"
 #include "libraries/LoadObject.h"
 
 #include "main.h"
 #include "instancing.h"
-#include "camera.h"
 #include "content.h"
 #include "skybox.h"
 #include "full.h"
 #include "plain.h"
-#include "light.h"
-
 
 #define FBO_RES 2048
 
-struct Camera pointLight;
-struct Light light;
+struct Light pointLight;
 FBOstruct *fbo;
 
 mat4 cubesTransform;
@@ -48,19 +43,18 @@ void initPointLight() {
 	vec3 position = (vec3){40, 20, 0};
 	vec3 target = (vec3){0, 3, -10};
 	vec3 normal = CrossProduct(position, target);
-	pointLight = createCamera(position, normal, target);
-	pointLight.projection = perspective(90, 1, 10, 4000);
 
-	light = (struct Light){
-		.position = position,
-		.coneDirection = VectorSub(target, position),
-		.coneAngle = 45,
+	pointLight = (struct Light) {
+		.camera = createCamera(position, normal, target),
+		.intensities = (vec3){1.0f, 1.0f, 1.0f},
 		.attenuation = 1.0f,
 		.ambientCoefficient = 1.0f,
-		.intensities = (vec3){1.0f, 1.0f, 1.0f}
+		.coneAngle = 45
 	};
 
-	setLight(&light);
+	pointLight.camera.projection = perspective(90, 1, 10, 4000);
+
+	setLight(&pointLight);
 }
 
 
@@ -72,12 +66,6 @@ void initShaders() {
 }
 
 
-void rotateLight(void) {
-	pointLight.position.x = 30.0 * -cos(glutGet(GLUT_ELAPSED_TIME)/10000.0);
-	pointLight.position.z = 30.0 * -sin(glutGet(GLUT_ELAPSED_TIME)/10000.0);
-}
-
-
 mat4 getShadowMapTransform(mat4 modelViewProjectionTransform) {
 	// Scale and bias transform, moving from unit cube [-1,1] to [0,1]
 	mat4 scaleBiasMatrix = Mult(T(0.5, 0.5, 0.0), S(0.5, 0.5, 1.0));
@@ -86,11 +74,10 @@ mat4 getShadowMapTransform(mat4 modelViewProjectionTransform) {
 
 
 void renderScene(void) {
-	rotateLight();
 	updateCamera(&userCamera);
 
-	mat4 lightTransform = getProjectionViewMatrix(&pointLight);
-	mat4 cameraTransform = getProjectionViewMatrix((struct Camera *)&userCamera);
+	mat4 lightTransform = getProjectionViewMatrix((struct Camera *) &pointLight);
+	mat4 cameraTransform = getProjectionViewMatrix((struct Camera *) &userCamera);
 	mat4 shadowMapTransform = getShadowMapTransform(lightTransform);
 
 	// 1. Render scene to FBO
@@ -108,7 +95,7 @@ void renderScene(void) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	drawSkybox(cameraTransform);
-	drawFull(modelLightPost, cameraTransform, lightPostTransform, shadowMapTransform, 0, fbo->depth);
+	// drawFull(modelLightPost, cameraTransform, lightPostTransform, shadowMapTransform, 0, fbo->depth);
 	drawModelInstanced(modelCube, cubesTransform, cameraTransform);
 	drawFull(modelPlane, cameraTransform, T(0,0,0), shadowMapTransform, textureGroundDiffuse, fbo->depth);
 

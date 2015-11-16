@@ -21,6 +21,7 @@ add_executable ( Projekt
 	skybox.c
 	full.c
 	plain.c
+	light.c
 	shaders/instancing.vert
 	shaders/instancing.frag
 	shaders/skybox.vert
