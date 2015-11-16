@@ -4,35 +4,50 @@
 #include "libraries/GLUtilities.h"
 
 #include "full.h"
-#include "utilities.h"
 
+static GLuint positionLocation = 0;
+static GLuint normalLocation   = 1;
+static GLuint textureLocation  = 2;
 
-static GLint positionLocation = 0;
-static GLint normalLocation   = 1;
-static GLint textureLocation  = 2;
-
-static GLint modelViewProjectionLocation;
+static GLint cameraLocation;
+static GLint modelLocation;
 static GLint shadowMapTransformLocation;
 
 static GLint materialLocation;
 static GLint normalMapLocation;
 static GLint shadowMapLocation;
 
+static GLint lightPositionLocation;
+static GLint lightIntensitiesLocation;
+static GLint lightAttenuationLocation;
+static GLint lightAmbientCoefficientLocation;
+static GLint lightConeAngleLocation;
+static GLint lightConeDirectionLocation;
+
+static struct Light *light;
 
 void initializeFullShader() {
 	fullProgram = loadShaders("shaders/full.vert", "shaders/full.frag");
 
-	modelViewProjectionLocation = glGetUniformLocation(fullProgram, "modelViewProjectionTransform");
+	cameraLocation = glGetUniformLocation(fullProgram, "camera");
+	modelLocation = glGetUniformLocation(fullProgram, "model");
 	shadowMapTransformLocation = glGetUniformLocation(fullProgram, "shadowMapTransform");
 	materialLocation = glGetUniformLocation(fullProgram, "material");
 	normalMapLocation = glGetUniformLocation(fullProgram, "normalMap");
 	shadowMapLocation = glGetUniformLocation(fullProgram, "shadowMap");
 
-	assert(modelViewProjectionLocation >= 0);
+	lightPositionLocation = glGetUniformLocation(fullProgram, "light.position");
+	lightIntensitiesLocation = glGetUniformLocation(fullProgram, "light.intensities");
+	lightAttenuationLocation = glGetUniformLocation(fullProgram, "light.attentuation");
+	lightAmbientCoefficientLocation = glGetUniformLocation(fullProgram, "light.ambientCoefficient");
+	lightConeAngleLocation = glGetUniformLocation(fullProgram, "light.coneAngle");
+	lightConeDirectionLocation = glGetUniformLocation(fullProgram, "light.coneDirection");
+
+	assert(cameraLocation >= 0);
+	assert(modelLocation >= 0);
 	assert(shadowMapTransformLocation >= 0);
-	assert(textureLocation >= 0);
-	// assert(materialLocation >= 0);
-	// assert(normalMapLocation >= 0);
+	assert(materialLocation >= 0);
+	// assert(normalMapLocation >= 0); Not used yet
 	assert(shadowMapLocation >= 0);
 
 	glUseProgram(fullProgram);
@@ -41,10 +56,22 @@ void initializeFullShader() {
 	glUniform1i(shadowMapLocation, 4);
 }
 
+static void setLightUniform(struct ShaderLight *light) {
+	glUniform3f(lightPositionLocation, light->position.x, light->position.y, light->position.z);
+	glUniform3f(lightIntensitiesLocation, light->intensities.x, light->intensities.y, light->intensities.z);
+	glUniform3f(lightConeDirectionLocation, light->coneDirection.x, light->coneDirection.y, light->coneDirection.z);
+	glUniform1f(lightAttenuationLocation, light->attenuation);
+	glUniform1f(lightAmbientCoefficientLocation, light->ambientCoefficient);
+	glUniform1f(lightConeAngleLocation, light->coneAngle);
+}
 
-void drawFull(Model *m, mat4 modelViewProjectionTransform, mat4 shadowMapTransform, mat4 modelTransform, GLuint texture, GLuint shadowMap) {
-	modelViewProjectionTransform = Mult(modelViewProjectionTransform, modelTransform);
-	shadowMapTransform = Mult(shadowMapTransform, modelTransform);
+void setLight(struct Light *_light) {
+	light = _light;
+}
+
+void drawFull(Model *m, mat4 cameraTransform, mat4 modelTransform, mat4 shadowMapTransform, GLuint texture, GLuint shadowMap) {
+	mat4 mvpTransform = Mult(cameraTransform, modelTransform);
+	mat4 shadowMapModelTransform = Mult(shadowMapTransform, modelTransform);
 
 	// Bind textures
 	glActiveTexture(GL_TEXTURE0 + 0);
@@ -54,8 +81,13 @@ void drawFull(Model *m, mat4 modelViewProjectionTransform, mat4 shadowMapTransfo
 
 	glUseProgram(fullProgram);
 
-	glUniformMatrix4fv(modelViewProjectionLocation, 1, GL_TRUE, modelViewProjectionTransform.m);
-	glUniformMatrix4fv(shadowMapTransformLocation, 1, GL_TRUE, shadowMapTransform.m);
+	glUniformMatrix4fv(cameraLocation, 1, GL_TRUE, mvpTransform.m);
+	glUniformMatrix4fv(modelLocation, 1, GL_TRUE, modelTransform.m);
+	glUniformMatrix4fv(shadowMapTransformLocation, 1, GL_TRUE, shadowMapModelTransform.m);
+
+	// Set light uniform
+	struct ShaderLight shaderLight = getShaderLight(light);
+	setLightUniform(&shaderLight);
 
 	// Vertex positions.
 	glBindVertexArray(m->vao);

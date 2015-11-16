@@ -82,14 +82,10 @@ void moveCameraOnKeyboard(struct Camera *c) {
 	vec3 forward;
 	vec3 leftV;
 	vec3 dir = cameraDirection(c);
-	if(keyIsDown('x')){
-		forward = ScalarMult(dir, 10.0f);
-		leftV = ScalarMult(CrossProduct(dir, c->normal), 10.0f);
-	}
-	else{
-		forward = ScalarMult(cameraDirection(c), 1.0f);
-		leftV = ScalarMult(CrossProduct(dir, c->normal), 1.0f);
-	}
+
+	float speed = keyIsDown('x') ? 10.0f : 1.0f;
+	forward = ScalarMult(dir, speed);
+	leftV = ScalarMult(Normalize(CrossProduct(dir, c->normal)), speed);
 
 	if(keyIsDown('w')) {
 		c->position = VectorAdd(c->position, forward);
@@ -155,8 +151,6 @@ mat4 getProjectionViewMatrix(struct Camera *c) {
 vec3 cameraDirection(struct Camera *c) {
 	return Normalize(VectorSub(c->target, c->position));
 }
-
-
 
 const char* getCurrentModeString() {
 	static char* strings[] = { "movie", "interactive" };
