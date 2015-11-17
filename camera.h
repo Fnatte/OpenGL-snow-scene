@@ -39,7 +39,7 @@ void updateCameraByMouse(struct Camera *c, int x, int y);
 void moveCameraOnKeyboard(struct Camera *c);
 
 /*
- * Changes the camera target with the rotation specified by 
+ * Changes the camera target with the rotation specified by
  * the given mouse coordinates.
  */
 void rotateCameraByMouse(struct Camera *c, int x, int y);
@@ -55,7 +55,7 @@ mat4 getProjectionViewMatrix(struct Camera *c);
 vec3 cameraDirection(struct Camera *c);
 
 /*
- * Set the projection matrix of the camera as a perspective matrix. 
+ * Set the projection matrix of the camera as a perspective matrix.
  */
 void setCameraPerspective(struct Camera *camera, float viewAngle, int width, int height, float near, float far);
 
@@ -73,5 +73,10 @@ void updateCameraShake(struct ShakeableCamera *camera);
  * Updates the specified camera based on the current mode.
  */
 void updateCamera(struct ShakeableCamera *c);
+
+/**
+ * Print the relevant parts of a camera to stdout.
+ */
+void printCamera();
 
 #endif

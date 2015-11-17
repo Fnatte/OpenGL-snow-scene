@@ -6,12 +6,14 @@
 #include "camera.h"
 #include "utilities.h"
 
+
 #define MODE_MOVIE 0
 #define MODE_INTERACTIVE 1
 
-int currentMode = MODE_MOVIE;
 
+int currentMode = MODE_MOVIE;
 int wasModeKeyDown = 0;
+
 
 static void resetShake(struct ShakeableCamera *c) {
 		static const float offsetMagnitude = 5;
@@ -24,10 +26,12 @@ static void resetShake(struct ShakeableCamera *c) {
 		c->shakeTime = 0;
 }
 
+
 struct Camera createCamera(vec3 position, vec3 normal, vec3 target) {
 	struct Camera c = (struct Camera) { position, normal, target, IdentityMatrix() };
 	return c;
 }
+
 
 struct ShakeableCamera createShakeableCamera(vec3 position, vec3 normal, vec3 target) {
 	struct ShakeableCamera c = (struct ShakeableCamera) {
@@ -78,6 +82,7 @@ void updateCameraByMouse(struct Camera *c, int x, int y) {
 	}
 }
 
+
 void moveCameraOnKeyboard(struct Camera *c) {
 	vec3 forward;
 	vec3 leftV;
@@ -117,6 +122,7 @@ void moveCameraOnKeyboard(struct Camera *c) {
 	printError("moveonkeyinputrelativecamera()");
 }
 
+
 void updateCameraShake(struct ShakeableCamera *c) {
 	c->shakeTime += 0.0015;
 
@@ -130,8 +136,9 @@ void updateCameraShake(struct ShakeableCamera *c) {
 	float t = c->shakeTime;
 	float step = (t*t) * (3.0f - 2*t);
 	c->base.target = VectorAdd(c->shakeFrom, ScalarMult(targetDiff, step));
-	
+
 }
+
 
 void rotateCameraByMouse(struct Camera *c, int x, int y) {
 	int width = glutGet(GLUT_WINDOW_WIDTH);
@@ -143,10 +150,12 @@ void rotateCameraByMouse(struct Camera *c, int x, int y) {
 	c->target = VectorAdd(c->target, c->position);
 }
 
+
 mat4 getProjectionViewMatrix(struct Camera *c) {
 	mat4 lookMatrix = lookAtv(c->position, c->target, c->normal);
 	return Mult(c->projection, lookMatrix);
 }
+
 
 vec3 cameraDirection(struct Camera *c) {
 	return Normalize(VectorSub(c->target, c->position));
@@ -161,4 +170,15 @@ const char* getCurrentModeString() {
 	}
 
 	return strings[currentMode];
+}
+
+
+void printCamera(struct Camera *c) {
+	printf("Position: ");
+	printVec3(c->position);
+	printf("Target: ");
+	printVec3(c->target);
+	printf("Normal: ");
+	printVec3(c->normal);
+	printf("\n");
 }
