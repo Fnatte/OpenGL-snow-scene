@@ -14,5 +14,6 @@ GLuint textureGroundDiffuse;
 GLuint textureGroundSpecular;
 GLuint textureGroundNormal;
 GLuint textureSkybox;
+GLuint textureMetal;
 
 void loadContent();
