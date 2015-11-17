@@ -31,17 +31,17 @@ void reshapeViewport(GLsizei w, GLsizei h) {
 
 
 void initUserCamera() {
-	vec3 position = (vec3){1.5f, 20.0f, -50.0f};
-	vec3 normal = (vec3){0.0f, 1.0f, 0.0f};
-	vec3 target = (vec3){10.0f, 15.0f, 5.0f};
+	vec3 position = (vec3){40, 20, 0};
+	vec3 target = (vec3){0, 3, -10};
+	vec3 normal = (vec3){0, 1, 0};
 	userCamera = createShakeableCamera(position, normal, target);
 	userCamera.base.projection = perspective(90, (GLfloat)glutGet(GLUT_WINDOW_X) / (GLfloat)glutGet(GLUT_WINDOW_Y), 0.1, 1000);
 }
 
 
 void initPointLight() {
-	vec3 position = (vec3){40, 20, 0};
-	vec3 target = (vec3){0, 3, -10};
+	vec3 position = (vec3){0.199828, 16.732456, -1.134634};
+	vec3 target = (vec3){0.287315, 16.304140, -1.340088};
 	vec3 normal = CrossProduct(position, target);
 
 	pointLight = (struct Light) {
@@ -142,7 +142,7 @@ int main(int argc, char** argv) {
 	initKeymapManager();
 
 	cubesTransform = T(-20, 100, -20);
-	lightPostTransform =  S(2.5, 2.5, 2.5);
+	lightPostTransform =  S(1.5, 1.5, 1.5);
 
 	glEnable(GL_DEPTH_TEST);
 	glClearColor(0,0,0,1.0f);
