@@ -20,6 +20,7 @@ add_executable ( Projekt
 	content.c
 	skybox.c
 	full.c
+	simple.c
 	plain.c
 	light.c
 	shaders/instancing.vert

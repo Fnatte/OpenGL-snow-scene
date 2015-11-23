@@ -15,6 +15,7 @@
 #include "skybox.h"
 #include "full.h"
 #include "plain.h"
+#include "simple.h"
 
 #define FBO_RES 2048
 
@@ -34,6 +35,9 @@ void initUserCamera() {
 	vec3 position = (vec3){40, 20, 0};
 	vec3 target = (vec3){0, 3, -10};
 	vec3 normal = (vec3){0, 1, 0};
+//	vec3 position = (vec3){0.199828, 16.732456, -1.134634};
+//	vec3 target = (vec3){0.287315, 16.304140, -1.340088};
+//	vec3 normal = CrossProduct(position, target);
 	userCamera = createShakeableCamera(position, normal, target);
 	userCamera.base.projection = perspective(90, (GLfloat)glutGet(GLUT_WINDOW_X) / (GLfloat)glutGet(GLUT_WINDOW_Y), 0.1, 1000);
 }
@@ -60,6 +64,7 @@ void initPointLight() {
 
 void initShaders() {
 	initializeFullShader();
+	initializeSimpleShader();
 	initializePlainShader();
 	initializeInstancingShader(10);
 	initializeSkyboxShader();
@@ -75,6 +80,7 @@ mat4 getShadowMapTransform(mat4 modelViewProjectionTransform) {
 
 void renderScene(void) {
 	updateCamera(&userCamera);
+	//moveCameraOnKeyboard((struct Camera *) &userCamera);
 
 	mat4 lightTransform = getProjectionViewMatrix((struct Camera *) &pointLight);
 	mat4 cameraTransform = getProjectionViewMatrix((struct Camera *) &userCamera);
@@ -94,10 +100,12 @@ void renderScene(void) {
 	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	drawSkybox(cameraTransform);
-	drawFull(modelLightPost, cameraTransform, lightPostTransform, shadowMapTransform, textureMetal, fbo->depth);
-	drawModelInstanced(modelCube, cubesTransform, cameraTransform);
-	drawFull(modelPlane, cameraTransform, T(0,0,0), shadowMapTransform, textureGroundDiffuse, fbo->depth);
+//	drawSkybox(cameraTransform);
+//	drawFull(modelLightPost, cameraTransform, lightPostTransform, shadowMapTransform, textureMetal, fbo->depth);
+//	drawModelInstanced(modelCube, cubesTransform, cameraTransform);
+//	drawFull(modelPlane, cameraTransform, T(0,0,0), shadowMapTransform, textureGroundDiffuse, fbo->depth);
+
+	drawSimple(modelPlane, Rz(-90), IdentityMatrix(), fbo->depth);
 
 	printError("Draw me like one of your italian girls");
 	glutSwapBuffers();
