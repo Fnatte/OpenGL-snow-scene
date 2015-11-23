@@ -16,7 +16,7 @@ tested on Linux, CentOS 6 and Ubuntu 14.04 specifically. In order to
 install the requiered libraries on Ubuntu, run the following command:
 
 ```
-sudo apt-get install freeglut3-dev mesa-common-dev libglew-dev
+sudo apt-get install freeglut3-dev mesa-common-dev libglew-dev libxmu-dev
 ```
 In addition you probably need to install an appropriate graphics
 driver.
