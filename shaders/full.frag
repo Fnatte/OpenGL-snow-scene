@@ -51,6 +51,11 @@ float GetShadow() {
     // Perform perspective division to get the actual texture position
     vec4 shadowCoordinateWdivide = lightSourceCoord / lightSourceCoord.w;
 
+    // So this sucks. But as of now we're not sure how to clamp the shadow
+    if(shadowCoordinateWdivide.x < 0 || shadowCoordinateWdivide.y < 0 || shadowCoordinateWdivide.x > 1 || shadowCoordinateWdivide.y > 1) {
+        return 1.0;
+    }
+
     // Used to lower moire' pattern and self-shadowing
     // The optimal value here will vary with different GPU's depending on their Z buffer resolution.
     shadowCoordinateWdivide.z -= 0.002;
