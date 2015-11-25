@@ -22,7 +22,7 @@ uniform struct Light {
     vec3 coneDirection;
 } light;
 
-vec3 ApplyLight(Light light, vec3 surfaceColor, vec3 normal, vec3 surfacePos, vec3 surfaceToCamera) {
+vec3 ApplyLight(Light light, vec3 surfaceColor, vec3 normal, vec3 surfacePos, vec3 surfaceToCamera, float shadow) {
     float materialShininess = 1.0;
     vec3 materialSpecularColor = vec3(1, 1, 1);
 
@@ -44,17 +44,12 @@ vec3 ApplyLight(Light light, vec3 surfaceColor, vec3 normal, vec3 surfacePos, ve
    vec3 diffuse = diffuseCoefficient * surfaceColor.rgb * light.intensities;
    vec3 specular = specularCoefficient * materialSpecularColor * light.intensities;
 
-   return ambient + attenuation * (diffuse + specular);
+   return ambient + shadow * attenuation * (diffuse + specular);
 }
 
 float GetShadow() {
     // Perform perspective division to get the actual texture position
     vec4 shadowCoordinateWdivide = lightSourceCoord / lightSourceCoord.w;
-
-    // So this sucks. But as of now we're not sure how to clamp the shadow
-    if(shadowCoordinateWdivide.x < 0 || shadowCoordinateWdivide.y < 0 || shadowCoordinateWdivide.x > 1 || shadowCoordinateWdivide.y > 1) {
-        return 1.0;
-    }
 
     // Used to lower moire' pattern and self-shadowing
     // The optimal value here will vary with different GPU's depending on their Z buffer resolution.
@@ -90,7 +85,7 @@ void main()
     vec3 surfaceToCamera = normalize(cameraPosition - surfacePos);
 
 	out_Color = vec4(
-        GetShadow() * ApplyLight(light, surfaceColor.rgb, normal, surfacePos, surfaceToCamera),
+        ApplyLight(light, surfaceColor.rgb, normal, surfacePos, surfaceToCamera, GetShadow()),
         surfaceColor.a
     );
 }

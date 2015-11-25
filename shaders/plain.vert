@@ -1,6 +1,7 @@
 #version 150
+#extension GL_ARB_explicit_attrib_location : enable
 
-in vec3 inPosition;
+layout (location = 0) in vec3 inPosition;
 
 uniform mat4 modelViewProjectionTransform;
 

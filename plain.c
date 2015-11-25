@@ -19,8 +19,8 @@ void initializePlainShader() {
 }
 
 
-void drawPlain(Model *m, mat4 modelViewProjectionTransform, mat4 modelTransform) {
-	modelViewProjectionTransform = Mult(modelViewProjectionTransform, modelTransform);
+void drawPlain(Model *m, mat4 cameraTransform, mat4 modelTransform) {
+	mat4 modelViewProjectionTransform = Mult(cameraTransform, modelTransform);
 
 	glUseProgram(plainProgram);
 	glUniformMatrix4fv(modelViewProjectionLocation, 1, GL_TRUE, modelViewProjectionTransform.m);

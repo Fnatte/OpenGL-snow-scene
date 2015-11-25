@@ -47,19 +47,19 @@ void initUserCamera() {
 
 
 void initPointLight() {
-	vec3 position = (vec3){0.199828, 16.732456, -1.134634};
-	vec3 target = (vec3){0.287315, 16.304140, -1.340088};
+	vec3 position = (vec3){0, 18.0, -0.67790};
+	vec3 target = (vec3){0.287315, 0, -7.340088};
 	vec3 normal = CrossProduct(position, target);
 
 	pointLight = (struct Light) {
 		.camera = createCamera(position, normal, target),
 		.intensities = (vec3){1.0f, 1.0f, 1.0f},
 		.attenuation = 1.0f,
-		.ambientCoefficient = 1.0f,
+		.ambientCoefficient = .2f,
 		.coneAngle = 45
 	};
 
-	pointLight.camera.projection = perspective(90, 1, 10, 4000);
+	pointLight.camera.projection = perspective(90, 1, 0.1, 100);
 
 	setLight(&pointLight);
 }
@@ -96,7 +96,6 @@ void renderScene(void) {
 	displayFBOKeyWasDown = displayFBOKeyIsDown;
 
 	updateCamera(&userCamera);
-	//moveCameraOnKeyboard((struct Camera *) &userCamera);
 
 	mat4 lightTransform = getProjectionViewMatrix((struct Camera *) &pointLight);
 	mat4 cameraTransform = getProjectionViewMatrix((struct Camera *) &userCamera);
@@ -168,7 +167,7 @@ int main(int argc, char** argv) {
 	initKeymapManager();
 
 	cubesTransform = T(-20, 100, -20);
-	lightPostTransform =  S(1.5, 1.5, 1.5);
+	lightPostTransform =  S(2.5, 2.5, 2.5);
 
 	glEnable(GL_DEPTH_TEST);
 	glClearColor(0,0,0,1.0f);
