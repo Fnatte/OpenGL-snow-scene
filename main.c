@@ -25,6 +25,9 @@ FBOstruct *fbo;
 mat4 cubesTransform;
 mat4 lightPostTransform;
 
+int displayFBO = 0;
+int displayFBOKeyWasDown = 0;
+
 void reshapeViewport(GLsizei w, GLsizei h) {
 	glViewport(0, 0, w, h);
 	userCamera.base.projection = perspective(90, 1.0 * w / h, 0.1, 1000);
@@ -79,6 +82,14 @@ mat4 getShadowMapTransform(mat4 modelViewProjectionTransform) {
 
 
 void renderScene(void) {
+
+	// Toggle display FBO with 'f'
+	int displayFBOKeyIsDown = keyIsDown('f');
+	if(displayFBOKeyWasDown && !displayFBOKeyIsDown) {
+		displayFBO = !displayFBO;
+	}
+	displayFBOKeyWasDown = displayFBOKeyIsDown;
+
 	updateCamera(&userCamera);
 	//moveCameraOnKeyboard((struct Camera *) &userCamera);
 
@@ -100,12 +111,14 @@ void renderScene(void) {
 	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-//	drawSkybox(cameraTransform);
-//	drawFull(modelLightPost, cameraTransform, lightPostTransform, shadowMapTransform, textureMetal, fbo->depth);
-//	drawModelInstanced(modelCube, cubesTransform, cameraTransform);
-//	drawFull(modelPlane, cameraTransform, T(0,0,0), shadowMapTransform, textureGroundDiffuse, fbo->depth);
+	drawSkybox(cameraTransform);
+	drawFull(modelLightPost, cameraTransform, lightPostTransform, shadowMapTransform, textureMetal, fbo->depth);
+	drawModelInstanced(modelCube, cubesTransform, cameraTransform);
+	drawFull(modelPlane, cameraTransform, T(0,0,0), shadowMapTransform, textureGroundDiffuse, fbo->depth);
 
-	drawSimple(modelPlane, Rz(-90), IdentityMatrix(), fbo->depth);
+	if(displayFBO) {
+		drawSimple(modelPlane, Mult(S(.009, .009, .009), Rx(45)), IdentityMatrix(), fbo->depth);
+	}
 
 	printError("Draw me like one of your italian girls");
 	glutSwapBuffers();
