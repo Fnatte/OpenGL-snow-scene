@@ -83,6 +83,11 @@ mat4 getShadowMapTransform(mat4 modelViewProjectionTransform) {
 
 void renderScene(void) {
 
+	// Allow exit on escape key
+	if(keyIsDown(27)) {
+		glutLeaveMainLoop();
+	}
+
 	// Toggle display FBO with 'f'
 	int displayFBOKeyIsDown = keyIsDown('f');
 	if(displayFBOKeyWasDown && !displayFBOKeyIsDown) {
