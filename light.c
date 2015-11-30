@@ -35,6 +35,6 @@ struct StreetLight createStreetLight(vec3 position) {
 	return (struct StreetLight) {
 		.lamp = lightSource,
 		.model = modelLightPost,
-		.position = position,
+		.modelTransform = Mult(T(position.x, position.y, position.z), S(2.5, 2.5, 2.5))
 	};
 }
