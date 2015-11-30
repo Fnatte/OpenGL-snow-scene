@@ -28,7 +28,9 @@ static void resetShake(struct ShakeableCamera *c) {
 
 
 struct Camera createCamera(vec3 position, vec3 normal, vec3 target) {
-	struct Camera c = (struct Camera) { position, normal, target, IdentityMatrix() };
+	struct Camera c = (struct Camera) {
+		position, normal, target, IdentityMatrix()
+	};
 	return c;
 }
 

@@ -24,8 +24,6 @@ static GLint lightAmbientCoefficientLocation;
 static GLint lightConeAngleLocation;
 static GLint lightConeDirectionLocation;
 
-static struct Light *light;
-
 void initializeFullShader() {
 	fullProgram = loadShaders("shaders/full.vert", "shaders/full.frag");
 
@@ -65,11 +63,8 @@ static void setLightUniform(struct ShaderLight *light) {
 	glUniform1f(lightConeAngleLocation, light->coneAngle);
 }
 
-void setLight(struct Light *_light) {
-	light = _light;
-}
 
-void drawFull(Model *m, mat4 cameraTransform, mat4 modelTransform, mat4 shadowMapTransform, GLuint texture, GLuint shadowMap) {
+void drawFull(Model *m, mat4 cameraTransform, mat4 modelTransform, mat4 shadowMapTransform, GLuint texture, GLuint shadowMap, struct Light light) {
 	mat4 shadowMapModelTransform = Mult(shadowMapTransform, modelTransform);
 
 	// Bind textures
@@ -85,7 +80,7 @@ void drawFull(Model *m, mat4 cameraTransform, mat4 modelTransform, mat4 shadowMa
 	glUniformMatrix4fv(shadowMapTransformLocation, 1, GL_TRUE, shadowMapModelTransform.m);
 
 	// Set light uniform
-	struct ShaderLight shaderLight = getShaderLight(light);
+	struct ShaderLight shaderLight = getShaderLight(&light);
 	setLightUniform(&shaderLight);
 
 	// Vertex positions.

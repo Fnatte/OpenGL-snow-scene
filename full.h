@@ -8,6 +8,5 @@ GLuint fullProgram;
 
 
 void initializeFullShader();
-void drawFull(Model *m, mat4 cameraTransform, mat4 modelTransform, mat4 shadowMapTransform, GLuint texture,
-			  GLuint shadowMap);
+void drawFull(Model *m, mat4 cameraTransform, mat4 modelTransform, mat4 shadowMapTransform, GLuint texture, GLuint shadowMap, struct Light light);
 void setLight(struct Light *_light);
