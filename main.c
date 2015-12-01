@@ -21,15 +21,13 @@
 #define NR_STREET_LIGHTS 2
 
 
-FBOstruct *fbo;
-
 mat4 cubesTransform;
-mat4 lightPostTransform;
 
 int displayFBO = 0;
 int displayFBOKeyWasDown = 0;
 
 struct StreetLight lights[NR_STREET_LIGHTS];
+FBOstruct* fbos[NR_STREET_LIGHTS];
 
 
 void reshapeViewport(GLsizei w, GLsizei h) {
@@ -49,7 +47,7 @@ void initUserCamera() {
 
 void initStreetLights() {
 	lights[0] = createStreetLight((vec3){0, 0, 0});
-	lights[1] = createStreetLight((vec3){-30, 0, -30});
+	lights[1] = createStreetLight((vec3){-80, 0.1, -80});
 }
 
 
@@ -74,12 +72,6 @@ void renderScene(void) {
 	if(keyIsDown(27)) {
 		glutLeaveMainLoop();
 	}
-	// Toggle display FBO with 'f'.
-	int displayFBOKeyIsDown = keyIsDown('f');
-	if(displayFBOKeyWasDown && !displayFBOKeyIsDown) {
-		displayFBO = !displayFBO;
-	}
-	displayFBOKeyWasDown = displayFBOKeyIsDown;
 
 	updateCamera(&userCamera);
 
@@ -92,33 +84,46 @@ void renderScene(void) {
 	}
 
 	// 1. Render scene to FBO
-	useFBO(fbo, NULL, NULL);
-	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	for (unsigned int i = 0; i < NR_STREET_LIGHTS; i++) {
-		drawPlain(modelLightPost, lightTransforms[i], lights[i].modelTransform);
-		drawModelInstanced(modelCube, cubesTransform, lightTransforms[i]);
+		useFBO(fbos[i], NULL, NULL);
+		glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	}
-	printError("Draw me like one of your french girls");
+	for (unsigned int i = 0; i < NR_STREET_LIGHTS; i++) {
+		useFBO(fbos[i], NULL, NULL);
+		drawPlain(modelLightPost, lightTransforms[i], lights[i].modelTransform);
+		drawModelInstanced(modelCube, Mult(cubesTransform, lights[i].modelTransform), lightTransforms[i]);
+		printError("Draw me like one of your french girls");
+	}
 
 	// 2. Render from camera.
-	useFBO(NULL, fbo, NULL);
-	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+	for (unsigned int i = 0; i < NR_STREET_LIGHTS; i++) {
+		useFBO(NULL, fbos[i], NULL);
+		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	}
 	drawSkybox(cameraTransform);
 	for (unsigned int i = 0; i < NR_STREET_LIGHTS; i++) {
-		drawFull(modelLightPost, cameraTransform, lights[i].modelTransform, shadowMapTransforms[i], textureMetal, fbo->depth, lights[i].lamp);
-		drawFull(modelPlane, cameraTransform, T(0,0,0), shadowMapTransforms[i], textureGroundDiffuse, fbo->depth, lights[i].lamp);
-	}
-	drawModelInstanced(modelCube, cubesTransform, cameraTransform);
+		useFBO(NULL, fbos[i], NULL);
+		drawModelInstanced(modelCube, Mult(cubesTransform, lights[i].modelTransform), cameraTransform);
+		drawFull(modelLightPost, cameraTransform, lights[i].modelTransform, shadowMapTransforms[i], textureMetal, fbos[i]->depth, lights[i].lamp);
+		drawFull(modelPlane, cameraTransform, lights[i].modelTransform, shadowMapTransforms[i], textureGroundDiffuse, fbos[i]->depth, lights[i].lamp);
 	printError("Draw me like one of your italian girls");
+	}
 
 
+
+	// Toggle display FBO with 'f'.
+	int displayFBOKeyIsDown = keyIsDown('f');
+	if(displayFBOKeyWasDown && !displayFBOKeyIsDown) {
+		displayFBO = (displayFBO + 1) % (NR_STREET_LIGHTS + 1);
+	}
+	displayFBOKeyWasDown = displayFBOKeyIsDown;
 	if(displayFBO) {
-		drawSimple(modelPlane, Mult(S(.009, .009, .009), Rx(45)), IdentityMatrix(), fbo->depth);
+		drawSimple(modelPlane, Mult(S(.009, .009, .009), Rx(45)), IdentityMatrix(), fbos[displayFBO - 1]->depth);
 		printError("FBO me timbers!");
 	}
+
 	glutSwapBuffers();
 }
 
@@ -153,7 +158,9 @@ int main(int argc, char** argv) {
 
 	dumpInfo();
 
-	fbo = initFBO2(FBO_RES, FBO_RES, 0, 1);
+	for (unsigned int i = 0; i < NR_STREET_LIGHTS; i++)
+		fbos[i] = initFBO2(FBO_RES, FBO_RES, 0, 1);
+
 	initShaders();
 	loadContent();
 	initUserCamera();
@@ -161,7 +168,6 @@ int main(int argc, char** argv) {
 	initKeymapManager();
 
 	cubesTransform = T(-20, 100, -20);
-	lightPostTransform =  S(2.5, 2.5, 2.5);
 
 	glEnable(GL_DEPTH_TEST);
 	glClearColor(0,0,0,1.0f);
