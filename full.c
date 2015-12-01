@@ -12,6 +12,7 @@ static GLuint textureLocation  = 2;
 static GLint cameraLocation;
 static GLint modelLocation;
 static GLint shadowMapTransformLocation;
+static GLint cameraPositionLocation;
 
 static GLint materialLocation;
 static GLint normalMapLocation;
@@ -29,6 +30,7 @@ static struct Light *light;
 void initializeFullShader() {
 	fullProgram = loadShaders("shaders/full.vert", "shaders/full.frag");
 
+	cameraPositionLocation = glGetUniformLocation(fullProgram, "cameraPosition");
 	cameraLocation = glGetUniformLocation(fullProgram, "camera");
 	modelLocation = glGetUniformLocation(fullProgram, "model");
 	shadowMapTransformLocation = glGetUniformLocation(fullProgram, "shadowMapTransform");
@@ -65,11 +67,8 @@ static void setLightUniform(struct ShaderLight *light) {
 	glUniform1f(lightConeAngleLocation, light->coneAngle);
 }
 
-void setLight(struct Light *_light) {
-	light = _light;
-}
-
-void drawFull(Model *m, mat4 cameraTransform, mat4 modelTransform, mat4 shadowMapTransform, GLuint texture, GLuint shadowMap) {
+void drawFull(Model *m, mat4 cameraTransform, mat4 modelTransform, mat4 shadowMapTransform, GLuint texture,
+			  GLuint shadowMap, struct Light* light, vec3 cameraPosition) {
 	mat4 shadowMapModelTransform = Mult(shadowMapTransform, modelTransform);
 
 	// Bind textures
@@ -80,6 +79,7 @@ void drawFull(Model *m, mat4 cameraTransform, mat4 modelTransform, mat4 shadowMa
 
 	glUseProgram(fullProgram);
 
+	glUniform3f(cameraPositionLocation, cameraPosition.x, cameraPosition.y, cameraPosition.z);
 	glUniformMatrix4fv(cameraLocation, 1, GL_TRUE, cameraTransform.m);
 	glUniformMatrix4fv(modelLocation, 1, GL_TRUE, modelTransform.m);
 	glUniformMatrix4fv(shadowMapTransformLocation, 1, GL_TRUE, shadowMapModelTransform.m);

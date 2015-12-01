@@ -60,8 +60,6 @@ void initPointLight() {
 	};
 
 	pointLight.camera.projection = perspective(90, 1, 0.1, 100);
-
-	setLight(&pointLight);
 }
 
 
@@ -69,7 +67,7 @@ void initShaders() {
 	initializeFullShader();
 	initializeSimpleShader();
 	initializePlainShader();
-	initializeInstancingShader(10);
+	initializeInstancingShader(20);
 	initializeSkyboxShader();
 }
 
@@ -107,7 +105,7 @@ void renderScene(void) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	drawPlain(modelLightPost, lightTransform, lightPostTransform);
-	drawModelInstanced(modelCube, cubesTransform, lightTransform);
+	drawModelInstanced(modelCube, lightTransform, cubesTransform, textureMetal, &pointLight);
 	printError("Draw me like one of your french girls");
 
 	// 2. Render from camera.
@@ -116,9 +114,9 @@ void renderScene(void) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	drawSkybox(cameraTransform);
-	drawFull(modelLightPost, cameraTransform, lightPostTransform, shadowMapTransform, textureMetal, fbo->depth);
-	drawModelInstanced(modelCube, cubesTransform, cameraTransform);
-	drawFull(modelPlane, cameraTransform, T(0,0,0), shadowMapTransform, textureGroundDiffuse, fbo->depth);
+	drawFull(modelLightPost, cameraTransform, lightPostTransform, shadowMapTransform, textureMetal, fbo->depth, &pointLight, userCamera.base.position);
+	drawModelInstanced(modelCube, cameraTransform, cubesTransform, textureMetal, &pointLight);
+	drawFull(modelPlane, cameraTransform, T(0,0,0), shadowMapTransform, textureGroundDiffuse, fbo->depth, &pointLight, userCamera.base.position);
 
 	if(displayFBO) {
 		drawSimple(modelPlane, Mult(S(.009, .009, .009), Rx(45)), IdentityMatrix(), fbo->depth);
@@ -166,7 +164,7 @@ int main(int argc, char** argv) {
 	initPointLight();
 	initKeymapManager();
 
-	cubesTransform = T(-20, 100, -20);
+	cubesTransform = T(-10, 20, -10);
 	lightPostTransform =  S(2.5, 2.5, 2.5);
 
 	glEnable(GL_DEPTH_TEST);

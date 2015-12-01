@@ -22,9 +22,9 @@ uniform struct Light {
     vec3 coneDirection;
 } light;
 
-vec3 ApplyLight(Light light, vec3 surfaceColor, vec3 normal, vec3 surfacePos, vec3 surfaceToCamera, float shadow) {
+vec3 applyLight(Light light, vec3 surfaceColor, vec3 normal, vec3 surfacePos, vec3 surfaceToCamera, float shadow) {
     float materialShininess = 1.0;
-    vec3 materialSpecularColor = vec3(1, 1, 1);
+    vec3 materialSpecularColor = vec3(0.25);
 
     vec3 surfaceToLight = normalize(light.position - surfacePos);
     float distanceToLight = length(light.position - surfacePos);
@@ -47,7 +47,7 @@ vec3 ApplyLight(Light light, vec3 surfaceColor, vec3 normal, vec3 surfacePos, ve
    return ambient + shadow * attenuation * (diffuse + specular);
 }
 
-float GetShadow() {
+float getShadow() {
     // Perform perspective division to get the actual texture position
     vec4 shadowCoordinateWdivide = lightSourceCoord / lightSourceCoord.w;
 
@@ -76,8 +76,7 @@ float GetShadow() {
     return shadow;
 }
 
-void main()
-{
+void main() {
     vec3 normal = normalize(transpose(inverse(mat3(model))) * fragNormal);
 
     vec3 surfacePos = vec3(model * vec4(fragPosition, 1));
@@ -85,7 +84,7 @@ void main()
     vec3 surfaceToCamera = normalize(cameraPosition - surfacePos);
 
 	out_Color = vec4(
-        ApplyLight(light, surfaceColor.rgb, normal, surfacePos, surfaceToCamera, GetShadow()),
+        applyLight(light, surfaceColor.rgb, normal, surfacePos, surfaceToCamera, getShadow()),
         surfaceColor.a
     );
 }
