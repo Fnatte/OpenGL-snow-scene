@@ -18,15 +18,17 @@
 #include "simple.h"
 
 #define FBO_RES 2048
+#define NR_STREET_LIGHTS 2
 
-struct Light pointLight;
-FBOstruct *fbo;
 
 mat4 cubesTransform;
-mat4 lightPostTransform;
 
 int displayFBO = 0;
 int displayFBOKeyWasDown = 0;
+
+struct StreetLight lights[NR_STREET_LIGHTS];
+FBOstruct* fbos[NR_STREET_LIGHTS];
+
 
 void reshapeViewport(GLsizei w, GLsizei h) {
 	glViewport(0, 0, w, h);
@@ -38,28 +40,14 @@ void initUserCamera() {
 	vec3 position = (vec3){40, 20, 0};
 	vec3 target = (vec3){0, 3, -10};
 	vec3 normal = (vec3){0, 1, 0};
-//	vec3 position = (vec3){0.199828, 16.732456, -1.134634};
-//	vec3 target = (vec3){0.287315, 16.304140, -1.340088};
-//	vec3 normal = CrossProduct(position, target);
 	userCamera = createShakeableCamera(position, normal, target);
 	userCamera.base.projection = perspective(90, (GLfloat)glutGet(GLUT_WINDOW_X) / (GLfloat)glutGet(GLUT_WINDOW_Y), 0.1, 1000);
 }
 
 
-void initPointLight() {
-	vec3 position = (vec3){0, 18.0, -0.67790};
-	vec3 target = (vec3){0.287315, 0, -7.340088};
-	vec3 normal = CrossProduct(position, target);
-
-	pointLight = (struct Light) {
-		.camera = createCamera(position, normal, target),
-		.intensities = (vec3){1.0f, 1.0f, 1.0f},
-		.attenuation = 1.0f,
-		.ambientCoefficient = .2f,
-		.coneAngle = 45
-	};
-
-	pointLight.camera.projection = perspective(90, 1, 0.1, 100);
+void initStreetLights() {
+	lights[0] = createStreetLight((vec3){0, 0, 0});
+	lights[1] = createStreetLight((vec3){-80, 0.1, -80});
 }
 
 
@@ -80,49 +68,62 @@ mat4 getShadowMapTransform(mat4 modelViewProjectionTransform) {
 
 
 void renderScene(void) {
-
-	// Allow exit on escape key
+	// Quit when Esc is pressed.
 	if(keyIsDown(27)) {
 		glutLeaveMainLoop();
 	}
 
-	// Toggle display FBO with 'f'
-	int displayFBOKeyIsDown = keyIsDown('f');
-	if(displayFBOKeyWasDown && !displayFBOKeyIsDown) {
-		displayFBO = !displayFBO;
-	}
-	displayFBOKeyWasDown = displayFBOKeyIsDown;
-
 	updateCamera(&userCamera);
 
-	mat4 lightTransform = getProjectionViewMatrix((struct Camera *) &pointLight);
 	mat4 cameraTransform = getProjectionViewMatrix((struct Camera *) &userCamera);
-	mat4 shadowMapTransform = getShadowMapTransform(lightTransform);
-
-	// 1. Render scene to FBO
-	useFBO(fbo, NULL, NULL);
-	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	drawPlain(modelLightPost, lightTransform, lightPostTransform);
-	drawModelInstanced(modelCube, lightTransform, cubesTransform, textureMetal, &pointLight);
-	printError("Draw me like one of your french girls");
-
-	// 2. Render from camera.
-	useFBO(NULL, fbo, NULL);
-	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	drawSkybox(cameraTransform);
-	drawFull(modelLightPost, cameraTransform, lightPostTransform, shadowMapTransform, textureMetal, fbo->depth, &pointLight, userCamera.base.position);
-	drawModelInstanced(modelCube, cameraTransform, cubesTransform, textureMetal, &pointLight);
-	drawFull(modelPlane, cameraTransform, T(0,0,0), shadowMapTransform, textureGroundDiffuse, fbo->depth, &pointLight, userCamera.base.position);
-
-	if(displayFBO) {
-		drawSimple(modelPlane, Mult(S(.009, .009, .009), Rx(45)), IdentityMatrix(), fbo->depth);
+	mat4 lightTransforms[NR_STREET_LIGHTS];
+	mat4 shadowMapTransforms[NR_STREET_LIGHTS];
+	for (unsigned int i = 0; i < NR_STREET_LIGHTS; i++) {
+		lightTransforms[i] = getProjectionViewMatrix((struct Camera *) &lights[i]);
+		shadowMapTransforms[i] = getShadowMapTransform(lightTransforms[i]);
 	}
 
-	printError("Draw me like one of your italian girls");
+	// 1. Render scene to FBO
+	for (unsigned int i = 0; i < NR_STREET_LIGHTS; i++) {
+		useFBO(fbos[i], NULL, NULL);
+		glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	}
+	for (unsigned int i = 0; i < NR_STREET_LIGHTS; i++) {
+		useFBO(fbos[i], NULL, NULL);
+		drawPlain(modelLightPost, lightTransforms[i], lights[i].modelTransform);
+		drawModelInstanced(modelCube, lightTransforms[i], Mult(cubesTransform, lights[i].modelTransform), &lights[i].lamp);
+		printError("Draw me like one of your french girls");
+	}
+
+	// 2. Render from camera.
+	for (unsigned int i = 0; i < NR_STREET_LIGHTS; i++) {
+		useFBO(NULL, fbos[i], NULL);
+		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	}
+	drawSkybox(cameraTransform);
+	for (unsigned int i = 0; i < NR_STREET_LIGHTS; i++) {
+		useFBO(NULL, fbos[i], NULL);
+		drawModelInstanced(modelCube, cameraTransform, Mult(cubesTransform, lights[i].modelTransform), &lights[i].lamp);
+		drawFull(modelLightPost, cameraTransform, lights[i].modelTransform, shadowMapTransforms[i], textureMetal,
+				 fbos[i]->depth, &lights[i].lamp, userCamera.base.position);
+		drawFull(modelPlane, cameraTransform, lights[i].modelTransform, shadowMapTransforms[i], textureGroundDiffuse,
+				 fbos[i]->depth, &lights[i].lamp, userCamera.base.position);
+		printError("Draw me like one of your italian girls");
+	}
+
+	// Toggle display FBO with 'f'.
+	int displayFBOKeyIsDown = keyIsDown('f');
+	if(displayFBOKeyWasDown && !displayFBOKeyIsDown) {
+		displayFBO = (displayFBO + 1) % (NR_STREET_LIGHTS + 1);
+	}
+	displayFBOKeyWasDown = displayFBOKeyIsDown;
+	if(displayFBO) {
+		drawSimple(modelPlane, Mult(S(.009, .009, .009), Rx(45)), IdentityMatrix(), fbos[displayFBO - 1]->depth);
+		printError("FBO me timbers!");
+	}
+
 	glutSwapBuffers();
 }
 
@@ -157,15 +158,16 @@ int main(int argc, char** argv) {
 
 	dumpInfo();
 
-	fbo = initFBO2(FBO_RES, FBO_RES, 0, 1);
+	for (unsigned int i = 0; i < NR_STREET_LIGHTS; i++)
+		fbos[i] = initFBO2(FBO_RES, FBO_RES, 0, 1);
+
 	initShaders();
 	loadContent();
 	initUserCamera();
-	initPointLight();
+	initStreetLights();
 	initKeymapManager();
 
-	cubesTransform = T(-10, 20, -10);
-	lightPostTransform =  S(2.5, 2.5, 2.5);
+	cubesTransform = T(-10, 70, -10);
 
 	glEnable(GL_DEPTH_TEST);
 	glClearColor(0,0,0,1.0f);

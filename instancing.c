@@ -97,7 +97,7 @@ static void createInstanceTransforms(mat4 *transforms, double time, mat4 modelTr
 	}
 }
 
-void drawModelInstanced(Model *m, mat4 cameraTransform, mat4 modelTransform, GLuint texture, struct Light* light) {
+void drawModelInstanced(Model *m, mat4 cameraTransform, mat4 modelTransform, struct Light* light) {
 	double time = glutGet(GLUT_ELAPSED_TIME) / 1000.0;
 
 	// Generate data.

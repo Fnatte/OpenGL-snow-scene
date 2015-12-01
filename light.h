@@ -21,6 +21,14 @@ struct ShaderLight {
 	float coneAngle;
 };
 
+struct StreetLight {
+	struct Light lamp;
+	Model* model;
+	mat4 modelTransform;
+};
+
 struct ShaderLight getShaderLight(struct Light *light);
+
+struct StreetLight createStreetLight(vec3 position);
 
 #endif

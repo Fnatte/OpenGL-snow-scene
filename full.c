@@ -25,8 +25,6 @@ static GLint lightAmbientCoefficientLocation;
 static GLint lightConeAngleLocation;
 static GLint lightConeDirectionLocation;
 
-static struct Light *light;
-
 void initializeFullShader() {
 	fullProgram = loadShaders("shaders/full.vert", "shaders/full.frag");
 
