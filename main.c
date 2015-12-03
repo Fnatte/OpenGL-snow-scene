@@ -55,7 +55,7 @@ void initShaders() {
 	initializeFullShader();
 	initializeSimpleShader();
 	initializePlainShader();
-	initializeInstancingShader(20);
+	initializeInstancingShader(10);
 	initializeSkyboxShader();
 }
 
