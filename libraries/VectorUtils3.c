@@ -67,7 +67,10 @@
 // but if you grab some snippets from it without reference... no problem.
 
 
+#include <stdio.h>
+
 #include "VectorUtils3.h"
+
 
 char transposed = 0;
 
@@ -266,6 +269,11 @@ char transposed = 0;
 		}
 		return m;
 	}
+
+  mat4 Tvec3(vec3 distance)
+  {
+	  return T(distance.x, distance.y, distance.z);
+  }
 
 	mat4 S(GLfloat sx, GLfloat sy, GLfloat sz)
 	{
@@ -890,4 +898,16 @@ mat4 InvertMat4(mat4 a)
 	b.m[14]=(-n*u+p*B-r*A)*q;
 	b.m[15]=(k*u-l*B+o*A)*q;
 	return b;
+}
+
+
+void printMat4(mat4 m)
+{
+	printf(" _______________________________________________________________\n");
+	for (unsigned int i = 0; i < 4; i++) {
+		int n = i * 4;
+		printf("| %f\t| %f\t| %f\t| %f\t|\n",
+					 m.m[n], m.m[n+1], m.m[n+2], m.m[n+3]);
+	}
+	printf(" ---------------------------------------------------------------\n");
 }

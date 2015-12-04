@@ -81,6 +81,7 @@ extern "C" {
 	mat4 Ry(GLfloat a);
 	mat4 Rz(GLfloat a);
 	mat4 T(GLfloat tx, GLfloat ty, GLfloat tz);
+	mat4 Tvec3(vec3 distance);
 	mat4 S(GLfloat sx, GLfloat sy, GLfloat sz);
 	mat4 Mult(mat4 a, mat4 b); // dest = a * b - rename to MultMat4 considered but I don't like to make the name of the most common operation longer
 	// but for symmetry, MultMat4 is made a synonym:
@@ -126,6 +127,10 @@ extern "C" {
 	mat4 mat3tomat4(mat3 m);
 	vec3 vec4tovec3(vec4 v);
 	vec4 vec3tovec4(vec3 v);
+
+// Print functions
+	void printMat4(mat4 m);
+
 #ifdef __cplusplus
 }
 #endif
