@@ -47,8 +47,3 @@ vec3 getRandVec3(float upperLimit, float lowerLimit) {
 		(float)rand() / divider
 	);
 }
-
-
-void printVec3(vec3 in) {
-	printf("(%f, %f, %f)\n", in.x, in.y, in.z);
-}

@@ -128,8 +128,9 @@ extern "C" {
 	vec3 vec4tovec3(vec4 v);
 	vec4 vec3tovec4(vec3 v);
 
-// Print functions
+// Print debug functions.
 	void printMat4(mat4 m);
+	void printVec3(vec3 in);
 
 #ifdef __cplusplus
 }

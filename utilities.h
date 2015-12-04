@@ -8,4 +8,3 @@ vec3 getRandVec3(float upperLimit, float lowerLimit);
 /**
  * Prints a vec3 to stdout.
  */
-void printVec3(vec3 in);
