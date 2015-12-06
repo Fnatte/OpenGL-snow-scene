@@ -30,8 +30,6 @@ static GLint lightAmbientCoefficientLocation;
 static GLint lightConeAngleLocation;
 static GLint lightConeDirectionLocation;
 
-static struct Light *light;
-
 static float* randoms;
 
 static int count;
@@ -81,8 +79,7 @@ static void createInstanceTransforms(mat4 *transforms, double time, mat4 modelTr
 				int index = x + y * count + z * count * count;
 				float scale = (3 - randoms[index])/6;
 				transforms[index] = Transpose(
-						Mult(Mult(Mult(Mult(
-											   T(
+						Mult(Mult(Mult(Mult(T(
 													   x * 4 + randoms[index],
 													   fmod(-(time * (randoms[index] + 12.0) + (float)index), 100),
 													   z * 4 + randoms[index]

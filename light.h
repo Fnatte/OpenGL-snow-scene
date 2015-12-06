@@ -24,7 +24,7 @@ struct ShaderLight {
 struct StreetLight {
 	struct Light lamp;
 	Model* model;
-	mat4 modelTransform;
+	vec3 position;
 };
 
 struct ShaderLight getShaderLight(struct Light *light);

@@ -27,7 +27,7 @@ struct StreetLight createStreetLight(vec3 position) {
 		.camera = createCamera(lightPosition, lightNormal, lightTarget),
 		.intensities = (vec3){1.0f, 1.0f, 1.0f},
 		.attenuation = 1.0f,
-		.ambientCoefficient = .2f,
+		.ambientCoefficient = .05f,
 		.coneAngle = 45
 	};
 	lightSource.camera.projection = perspective(90, 1, 0.1, 100);
@@ -35,6 +35,6 @@ struct StreetLight createStreetLight(vec3 position) {
 	return (struct StreetLight) {
 		.lamp = lightSource,
 		.model = modelLightPost,
-		.modelTransform = Mult(T(position.x, position.y, position.z), S(2.5, 2.5, 2.5))
+		.position = position,
 	};
 }

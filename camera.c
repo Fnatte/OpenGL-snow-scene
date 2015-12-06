@@ -121,6 +121,10 @@ void moveCameraOnKeyboard(struct Camera *c) {
 		c->target.y -= 0.1;
 	}
 
+	if (keyIsDown('p')) {
+		printVec3(c->position);
+	}
+
 	printError("moveonkeyinputrelativecamera()");
 }
 

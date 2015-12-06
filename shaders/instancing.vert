@@ -19,7 +19,7 @@ void main(void)
 	gl_Position = camera * model * instanceTrans * vec4(position, 1.0);
 
 	// Pass to fragment shader
-//	fragTexCoord = textureCoordinates;
+	// fragTexCoord = textureCoordinates;
 	fragPosition = position;
 	fragNormal = normal;
 	fragInstanceTrans = instanceTrans;

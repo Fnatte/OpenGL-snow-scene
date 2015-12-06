@@ -17,11 +17,12 @@
 #include "plain.h"
 #include "simple.h"
 
+
 #define FBO_RES 2048
 #define NR_STREET_LIGHTS 2
 
 
-mat4 cubesTransform;
+vec3 snowPosRelativeLight = (vec3){-10.0, 50.0, -10.0};
 
 int displayFBO = 0;
 int displayFBOKeyWasDown = 0;
@@ -46,8 +47,8 @@ void initUserCamera() {
 
 
 void initStreetLights() {
-	lights[0] = createStreetLight((vec3){0, 0, 0});
-	lights[1] = createStreetLight((vec3){-80, 0.1, -80});
+	lights[0] = createStreetLight((vec3){0.0, 0.0, 0.0});
+	lights[1] = createStreetLight((vec3){-80.0, 0.1, -80.0});
 }
 
 
@@ -91,8 +92,8 @@ void renderScene(void) {
 	}
 	for (unsigned int i = 0; i < NR_STREET_LIGHTS; i++) {
 		useFBO(fbos[i], NULL, NULL);
-		drawPlain(modelLightPost, lightTransforms[i], lights[i].modelTransform);
-		drawModelInstanced(modelCube, lightTransforms[i], Mult(cubesTransform, lights[i].modelTransform), &lights[i].lamp);
+		drawPlain(modelLightPost, lightTransforms[i], Tvec3(lights[i].position));
+		drawModelInstanced(modelCube, lightTransforms[i], Tvec3(VectorAdd(lights[i].position, snowPosRelativeLight)), &lights[i].lamp);
 		printError("Draw me like one of your french girls");
 	}
 
@@ -105,10 +106,10 @@ void renderScene(void) {
 	drawSkybox(cameraTransform);
 	for (unsigned int i = 0; i < NR_STREET_LIGHTS; i++) {
 		useFBO(NULL, fbos[i], NULL);
-		drawModelInstanced(modelCube, cameraTransform, Mult(cubesTransform, lights[i].modelTransform), &lights[i].lamp);
-		drawFull(modelLightPost, cameraTransform, lights[i].modelTransform, shadowMapTransforms[i], textureMetal,
+		drawModelInstanced(modelCube, cameraTransform, Tvec3(VectorAdd(lights[i].position, snowPosRelativeLight)), &lights[i].lamp);
+		drawFull(modelLightPost, cameraTransform, Tvec3(lights[i].position), shadowMapTransforms[i], textureMetal,
 				 fbos[i]->depth, &lights[i].lamp, userCamera.base.position);
-		drawFull(modelPlane, cameraTransform, lights[i].modelTransform, shadowMapTransforms[i], textureGroundDiffuse,
+		drawFull(modelPlane, cameraTransform, Tvec3(lights[i].position), shadowMapTransforms[i], textureGroundDiffuse,
 				 fbos[i]->depth, &lights[i].lamp, userCamera.base.position);
 		printError("Draw me like one of your italian girls");
 	}
@@ -120,7 +121,7 @@ void renderScene(void) {
 	}
 	displayFBOKeyWasDown = displayFBOKeyIsDown;
 	if(displayFBO) {
-		drawSimple(modelPlane, Mult(S(.009, .009, .009), Rx(45)), IdentityMatrix(), fbos[displayFBO - 1]->depth);
+		drawSimple(modelPlane, Mult(S(.04, .04, .04), Rx(45)), IdentityMatrix(), fbos[displayFBO - 1]->depth);
 		printError("FBO me timbers!");
 	}
 
@@ -134,6 +135,7 @@ void handleMouse(int x, int y) {
 
 
 void onTimer(int value) {
+	printError("Här var det error upp över öronen!");
 	glutPostRedisplay();
 	glutTimerFunc(16, &onTimer, value);
 	printError("OnTimer()");
@@ -166,8 +168,6 @@ int main(int argc, char** argv) {
 	initUserCamera();
 	initStreetLights();
 	initKeymapManager();
-
-	cubesTransform = T(-10, 70, -10);
 
 	glEnable(GL_DEPTH_TEST);
 	glClearColor(0,0,0,1.0f);
