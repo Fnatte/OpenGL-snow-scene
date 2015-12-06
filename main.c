@@ -22,7 +22,7 @@
 #define NR_STREET_LIGHTS 2
 
 
-vec3 snowPosRelativeLight = (vec3){-10.0, 50.0, -10.0};
+vec3 snowPosRelativeLight;
 
 int displayFBO = 0;
 int displayFBOKeyWasDown = 0;
@@ -162,6 +162,8 @@ int main(int argc, char** argv) {
 
 	for (unsigned int i = 0; i < NR_STREET_LIGHTS; i++)
 		fbos[i] = initFBO2(FBO_RES, FBO_RES, 0, 1);
+
+	snowPosRelativeLight = (vec3){-10.0, 50.0, -10.0};
 
 	initShaders();
 	loadContent();
