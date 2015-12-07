@@ -113,6 +113,9 @@ void renderScene(void) {
 				 fbos[i]->depth, &lights[i].lamp, userCamera.base.position);
 		printError("Draw me like one of your italian girls");
 	}
+	drawFull(modelPlane, cameraTransform, Mult(S(10.0, 10.0, 10.0), T(0.0, -0.1, 0.0)), shadowMapTransforms[0],
+					 textureGroundDiffuse, fbos[0]->depth, &lights[0].lamp, userCamera.base.position);
+
 
 	// Toggle display FBO with 'f'.
 	int displayFBOKeyIsDown = keyIsDown('f');
