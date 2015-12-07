@@ -3,6 +3,7 @@
 #include <GL/glew.h>
 #include <GL/glut.h>
 #include <assert.h>
+#include <stdio.h>
 
 #include "./libraries/GLUtilities.h"
 #include "./libraries/LoadObject.h"
@@ -38,7 +39,7 @@ GLuint instancingProgram;
 
 void initializeInstancingShader(int _count) {
 	count = _count;
-	randoms = getRandFloatArray(count * count * count, 1.0, 4.0);
+	randoms = getRandFloatArray(count * count * count + 2, 1.0f, 0.0f);
 
 	instancingProgram = loadShaders("./shaders/instancing.vert", "./shaders/instancing.frag");
 
@@ -72,23 +73,27 @@ static void setLightUniform(struct ShaderLight *light) {
 	glUniform1f(lightConeAngleLocation, light->coneAngle);
 }
 
-static void createInstanceTransforms(mat4 *transforms, double time, mat4 modelTransform) {
+static void createInstanceTransforms(mat4 *transforms, float time) {
 	for (int x = 0; x < count; x++) {
 		for (int y = 0; y < count; y++) {
 			for (int z = 0; z < count; z++) {
 				int index = x + y * count + z * count * count;
-				float scale = (3 - randoms[index])/6;
-				transforms[index] = Transpose(
-						Mult(Mult(Mult(Mult(T(
-													   x * 4 + randoms[index],
-													   fmod(-(time * (randoms[index] + 12.0) + (float)index), 100),
-													   z * 4 + randoms[index]
-											   ), modelTransform),
-									   Rx(time * (randoms[index] - 1.0))),
-								  Rz(time * (randoms[index + 1] - 1.0))),
-							 S(scale, scale, scale)
-						)
-				);
+				vec3 rand = (vec3){randoms[index], randoms[index + 1], randoms[index + 2]};
+				float particleSize = .15f;
+				vec3 volumeSize = (vec3){4.2f, 4.2f, 4.2f};
+
+				float fallOffset = time * -15.0f;
+
+
+				mat4 translation = T(
+						(x - count/2) * volumeSize.x / particleSize + (0.5f - rand.x) * 20,
+						fmodf((y - count/2) * volumeSize.y / particleSize + (0.5f - rand.y) * 20 + fallOffset, 200.0f),
+						(z - count/2) * volumeSize.z / particleSize + (0.5f - rand.z) * 20);
+				mat4 rotation = IdentityMatrix(); // Mult(Rx(time * random1), Rz(time * random2));
+				mat4 scale = S(particleSize, particleSize, particleSize);
+
+
+				transforms[index] = Transpose(Mult(Mult(scale, rotation), translation));
 			}
 		}
 	}
@@ -99,7 +104,7 @@ void drawModelInstanced(Model *m, mat4 cameraTransform, mat4 modelTransform, str
 
 	// Generate data.
 	mat4 instanceTransforms[count * count * count];
-	createInstanceTransforms(instanceTransforms, time, modelTransform);
+	createInstanceTransforms(instanceTransforms, (float)time);
 
 	glUseProgram(instancingProgram);
 
