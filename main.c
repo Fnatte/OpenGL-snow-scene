@@ -56,7 +56,7 @@ void initShaders() {
 	initializeFullShader();
 	initializeSimpleShader();
 	initializePlainShader();
-	initializeInstancingShader(10);
+	initializeInstancingShader(13);
 	initializeSkyboxShader();
 }
 
@@ -166,7 +166,7 @@ int main(int argc, char** argv) {
 	for (unsigned int i = 0; i < NR_STREET_LIGHTS; i++)
 		fbos[i] = initFBO2(FBO_RES, FBO_RES, 0, 1);
 
-	snowPosRelativeLight = (vec3){-10.0, 50.0, -10.0};
+	snowPosRelativeLight = (vec3){0.0f, 30.0f, -10.5f};
 
 	initShaders();
 	loadContent();

@@ -36,7 +36,7 @@ vec3 applyLight(Light light, vec3 surfaceColor, vec3 normal, vec3 surfacePos, ve
     attenuation = 0.0;
    }
 
-   float diffuseCoefficient = max(0.0, dot(normal, surfaceToLight));
+   float diffuseCoefficient = max(0.0, dot(normal, surfaceToLight) * 0.5f + 0.5f);
    float specularCoefficient = diffuseCoefficient > 0 ?
         pow(max(0.0, dot(surfaceToCamera, reflect(-surfaceToLight, normal))), materialShininess) : 0;
 
