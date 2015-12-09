@@ -20,7 +20,6 @@ static GLint shadowMapLocation;
 
 static GLint lightPositionLocation;
 static GLint lightIntensitiesLocation;
-static GLint lightAttenuationLocation;
 static GLint lightAmbientCoefficientLocation;
 static GLint lightConeAngleLocation;
 static GLint lightConeDirectionLocation;
@@ -38,7 +37,6 @@ void initializeFullShader() {
 
 	lightPositionLocation = glGetUniformLocation(fullProgram, "light.position");
 	lightIntensitiesLocation = glGetUniformLocation(fullProgram, "light.intensities");
-	lightAttenuationLocation = glGetUniformLocation(fullProgram, "light.attentuation");
 	lightAmbientCoefficientLocation = glGetUniformLocation(fullProgram, "light.ambientCoefficient");
 	lightConeAngleLocation = glGetUniformLocation(fullProgram, "light.coneAngle");
 	lightConeDirectionLocation = glGetUniformLocation(fullProgram, "light.coneDirection");
@@ -60,7 +58,6 @@ static void setLightUniform(struct ShaderLight *light) {
 	glUniform3f(lightPositionLocation, light->position.x, light->position.y, light->position.z);
 	glUniform3f(lightIntensitiesLocation, light->intensities.x, light->intensities.y, light->intensities.z);
 	glUniform3f(lightConeDirectionLocation, light->coneDirection.x, light->coneDirection.y, light->coneDirection.z);
-	glUniform1f(lightAttenuationLocation, light->attenuation);
 	glUniform1f(lightAmbientCoefficientLocation, light->ambientCoefficient);
 	glUniform1f(lightConeAngleLocation, light->coneAngle);
 }

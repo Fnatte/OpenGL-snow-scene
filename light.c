@@ -10,7 +10,6 @@ struct ShaderLight getShaderLight(struct Light *light) {
 		.intensities = light->intensities,
 		.coneDirection = VectorSub(light->camera.target, light->camera.position),
 		.coneAngle = light->coneAngle,
-		.attenuation = light->attenuation,
 		.ambientCoefficient = light->ambientCoefficient
 	};
 }
@@ -26,11 +25,10 @@ struct StreetLight createStreetLight(vec3 position) {
 	struct Light lightSource = (struct Light) {
 		.camera = createCamera(lightPosition, lightNormal, lightTarget),
 		.intensities = (vec3){1.0f, 1.0f, 1.0f},
-		.attenuation = 1.0f,
-		.ambientCoefficient = .075f,
-		.coneAngle = 45
+		.ambientCoefficient = 0.03f,
+		.coneAngle = 100
 	};
-	lightSource.camera.projection = perspective(90, 1, 0.05, 100);
+	lightSource.camera.projection = perspective(lightSource.coneAngle, 1, 0.05, 100);
 
 	return (struct StreetLight) {
 		.lamp = lightSource,

@@ -13,10 +13,9 @@ out vec4 out_Color;
 uniform struct Light {
     vec3 position;
     vec3 intensities;
-    float attenuation;
+    vec3 coneDirection;
     float ambientCoefficient;
     float coneAngle;
-    vec3 coneDirection;
 } light;
 
 vec3 applyLight(Light light, vec3 surfaceColor, vec3 normal, vec3 surfacePos) {
@@ -25,16 +24,16 @@ vec3 applyLight(Light light, vec3 surfaceColor, vec3 normal, vec3 surfacePos) {
 
     vec3 surfaceToLight = normalize(light.position - surfacePos);
     float distanceToLight = length(light.position - surfacePos);
-    float attenuation = 1.0 / (1.0 + light.attenuation * pow(distanceToLight, 2));
+    float attenuation = 1.0 / (0.0001 * pow(distanceToLight, 3));
 
     // Cone restrictions
     float lightToSurfaceAngle = degrees(acos(dot(-surfaceToLight, normalize(light.coneDirection))));
-    if(lightToSurfaceAngle > light.coneAngle) {
+    if(lightToSurfaceAngle > light.coneAngle / 2) {
         attenuation = 0.0;
     }
 
    float diffuseCoefficient = 1.0;
-   float specularCoefficient = .1;
+   float specularCoefficient = 0.1;
 
     vec3 ambient = light.ambientCoefficient * surfaceColor.rgb * light.intensities;
     vec3 diffuse = diffuseCoefficient * surfaceColor.rgb * light.intensities;

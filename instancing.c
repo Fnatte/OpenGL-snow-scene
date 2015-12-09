@@ -26,7 +26,6 @@ static GLint materialLocation;
 
 static GLint lightPositionLocation;
 static GLint lightIntensitiesLocation;
-static GLint lightAttenuationLocation;
 static GLint lightAmbientCoefficientLocation;
 static GLint lightConeAngleLocation;
 static GLint lightConeDirectionLocation;
@@ -49,7 +48,6 @@ void initializeInstancingShader(int _count) {
 
 	lightPositionLocation = glGetUniformLocation(instancingProgram, "light.position");
 	lightIntensitiesLocation = glGetUniformLocation(instancingProgram, "light.intensities");
-	lightAttenuationLocation = glGetUniformLocation(instancingProgram, "light.attentuation");
 	lightAmbientCoefficientLocation = glGetUniformLocation(instancingProgram, "light.ambientCoefficient");
 	lightConeAngleLocation = glGetUniformLocation(instancingProgram, "light.coneAngle");
 	lightConeDirectionLocation = glGetUniformLocation(instancingProgram, "light.coneDirection");
@@ -68,7 +66,6 @@ static void setLightUniform(struct ShaderLight *light) {
 	glUniform3f(lightPositionLocation, light->position.x, light->position.y, light->position.z);
 	glUniform3f(lightIntensitiesLocation, light->intensities.x, light->intensities.y, light->intensities.z);
 	glUniform3f(lightConeDirectionLocation, light->coneDirection.x, light->coneDirection.y, light->coneDirection.z);
-	glUniform1f(lightAttenuationLocation, light->attenuation);
 	glUniform1f(lightAmbientCoefficientLocation, light->ambientCoefficient);
 	glUniform1f(lightConeAngleLocation, light->coneAngle);
 }
@@ -80,20 +77,19 @@ static void createInstanceTransforms(mat4 *transforms, float time) {
 				int index = x + y * count + z * count * count;
 				vec3 rand = (vec3){randoms[index], randoms[index + 1], randoms[index + 2]};
 				float particleSize = .15f;
-				vec3 volumeSize = (vec3){4.2f, 4.2f, 4.2f};
+				vec3 volumeSize = (vec3){4.2f, 4.2f, 12.0f};
 
-				float fallOffset = time * -15.0f;
-
+				float fallOffset = time * 25.0f;
 
 				mat4 translation = T(
-						(x - count/2) * volumeSize.x / particleSize + (0.5f - rand.x) * 20,
-						fmodf((y - count/2) * volumeSize.y / particleSize + (0.5f - rand.y) * 20 + fallOffset, 200.0f),
-						(z - count/2) * volumeSize.z / particleSize + (0.5f - rand.z) * 20);
-				mat4 rotation = IdentityMatrix(); // Mult(Rx(time * random1), Rz(time * random2));
+						(x - count/2) * volumeSize.x / particleSize + (0.5f - rand.x) * volumeSize.x * 6.0f,
+					-fmodf((y - count/2) * volumeSize.y / particleSize + (0.5f - rand.y) * volumeSize.y * 6.0f + fallOffset, 200.0f),
+						-fmodf((z - count/2) * volumeSize.z / particleSize + (0.5f - rand.z) * volumeSize.z * 6.0f + fallOffset * 0.5, volumeSize.z * 25.0));
+				mat4 rotation = Mult(Rx(time * 2.5 * rand.y), Rz(time * 2.0 * rand.x));
 				mat4 scale = S(particleSize, particleSize, particleSize);
 
 
-				transforms[index] = Transpose(Mult(Mult(scale, rotation), translation));
+				transforms[index] = Transpose(Mult(Mult(scale, translation), rotation));
 			}
 		}
 	}
