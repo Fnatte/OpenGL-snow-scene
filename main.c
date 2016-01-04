@@ -42,7 +42,9 @@ void initUserCamera() {
 	vec3 target = (vec3){0, 3, -10};
 	vec3 normal = (vec3){0, 1, 0};
 	userCamera = createShakeableCamera(position, normal, target);
-	userCamera.base.projection = perspective(90, (GLfloat)glutGet(GLUT_WINDOW_X) / (GLfloat)glutGet(GLUT_WINDOW_Y), 0.1, 1000);
+	userCamera.base.projection =
+		perspective(90, (GLfloat)glutGet(GLUT_WINDOW_X) /
+		            (GLfloat)glutGet(GLUT_WINDOW_Y), 0.1, 1000);
 }
 
 
@@ -106,16 +108,15 @@ void renderScene(void) {
 	drawSkybox(cameraTransform);
 	for (unsigned int i = 0; i < NR_STREET_LIGHTS; i++) {
 		useFBO(NULL, fbos[i], NULL);
-		drawModelInstanced(modelCube, cameraTransform, Tvec3(VectorAdd(lights[i].position, snowPosRelativeLight)), &lights[i].lamp);
-		drawFull(modelLightPost, cameraTransform, Tvec3(lights[i].position), shadowMapTransforms[i], textureMetal,
-				 fbos[i]->depth, &lights[i].lamp, userCamera.base.position);
-		drawFull(modelPlane, cameraTransform, Mult(Tvec3(lights[i].position), T(0.0, 0.0, -15.0)), shadowMapTransforms[i], textureGroundDiffuse,
-				 fbos[i]->depth, &lights[i].lamp, userCamera.base.position);
+		drawModelInstanced(modelCube, cameraTransform,
+		                   Tvec3(VectorAdd(lights[i].position, snowPosRelativeLight)), &lights[i].lamp);
+		drawFull(modelPlane, cameraTransform, Mult(Tvec3(lights[i].position), T(0.0, 0.0, -15.0)),
+		         shadowMapTransforms[i], textureGroundDiffuse,
+		         fbos[i]->depth, &lights[i].lamp, userCamera.base.position);
 		printError("Draw me like one of your italian girls");
 	}
 	drawFull(modelPlane, cameraTransform, Mult(S(10.0, 10.0, 10.0), T(0.0, -0.1, 0.0)), shadowMapTransforms[0],
-					 textureGroundDiffuse, fbos[0]->depth, &lights[0].lamp, userCamera.base.position);
-
+	         textureGroundDiffuse, fbos[0]->depth, &lights[0].lamp, userCamera.base.position);
 
 	// Toggle display FBO with 'f'.
 	int displayFBOKeyIsDown = keyIsDown('f');
@@ -155,8 +156,7 @@ int main(int argc, char** argv) {
 
 	glewExperimental = GL_TRUE;
 	GLenum err = glewInit();
-	// https://www.opengl.org/wiki/OpenGL_Loading_Library#GLEW_.28OpenGL_Extension_Wrangler.29
-	printError ("It should be safe to ignore this, see comment in code.");
+	printError ("It should be safe to ignore this: https://www.opengl.org/wiki/OpenGL_Loading_Library#GLEW_.28OpenGL_Extension_Wrangler.29.");
 	if (GLEW_OK != err) {
 		fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
 	}
