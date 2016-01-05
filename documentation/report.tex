@@ -68,6 +68,7 @@ There were some pretty sophisticated models used in the Disney film Frozen \href
 
 \subsubsection{Shadow Maps}
 
+Shadow maps are achieved by rendering the scene from the viewport of the light source.
 
 
 \subsection{Falling snow}
@@ -84,6 +85,31 @@ In order to simulate the effect of gusts of wind blowing on the snow navier stok
 With 3200 fresh lines of code our solution is split up into 10 C files and 10 shader programs. We do geometry instancing for the particle systems, shadow maps for the projection of shadows and proximity based directed lighting.
 
 
+\subsection{Shadow maps}
+
+Something which eased our work was the realization that a camera and a light source have a lot of commonalities:
+
+\begin{lstlisting}[float,label=lst:lamp-struct,caption=nextHopInfo: Light source struct]
+struct Camera {
+	vec3 position;
+	vec3 normal;
+	vec3 target;
+	mat4 projection;
+};
+
+struct Light {
+	struct Camera camera;
+	vec3 intensities;
+	float ambientCoefficient;
+	float coneAngle;
+};
+\end{lstlisting}
+
+This made it possible for us to position and rotate the light sources using the normal FPS camera controls we had developed for the camera - merely storing the data kept in a camera and then using it for a light source.
+
+Other than that there is nothing surprising in our implementation of shadow maps. We draw the the depth map with the simplest shader possible after which we use the resulting FBO.
+
+
 \section{Problems}
 
 A lot, like you have no idea how many problems we had.
@@ -95,6 +121,7 @@ We've probably refactored the codebase completelely somewhere around three times
 \subsection{Shadow buffer bugs}
 
 We ended up wasting about a week trying to debug a fully working implementation of shadow maps, only that it didn't render correct on the specific hardware we were developing it on.
+
 
 \section{Conclusions}
 
