@@ -11,8 +11,8 @@ basicstyle=\footnotesize
 }
 
 \title{Let it snow}
-\author{Christian Luckey}
-\author{Matteus Hemström}
+\author{Christian Luckey \\ Matteus Hemström}
+
 
 \begin{document}
 
@@ -81,21 +81,7 @@ In order to simulate the effect of gusts of wind blowing on the snow navier stok
 
 \section{Implementation}
 
-\begin{lstlisting}
-mat4 model_matrixes[count * count * count];
-for (int x = 0; x < count; x++) {
-  for (int y = 0; y < count; y++) {
-    for (int z = 0; z < count; z++) {
-      int pos = x + y * count + z * count * count;
-      model_matrixes[pos] = Mult(Mult(T(x * 2, y * 2, z * 2),
-          transEverything), Rx(time));
-      model_matrixes[pos] = Transpose(model_matrixes[pos]);
-    }
-  }
-}
-glBufferData(GL_ARRAY_BUFFER, sizeof(model_matrixes),
-    &model_matrixes, GL_STATIC_DRAW);
-\end{lstlisting}
+With 3200 fresh lines of code our solution is split up into 10 C files and 10 shader programs. We do geometry instancing for the particle systems, shadow maps for the projection of shadows and proximity based directed lighting.
 
 
 \section{Problems}
@@ -104,7 +90,7 @@ A lot, like you have no idea how many problems we had.
 
 \subsection{Detangling global state}
 
-We've probably refactored the codebase completelely somewhere around three times, trying to untangle it from iself.
+We've probably refactored the codebase completelely somewhere around three times, trying to untangle it from iself. The code we started out with, mostly based on old lab and project code with
 
 \subsection{Shadow buffer bugs}
 
@@ -114,5 +100,12 @@ We ended up wasting about a week trying to debug a fully working implementation 
 
 What we got was this:
 
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.9\textwidth]{result}
+  \caption{\label{fig:label} Our OpenGL snow scene.}
+\end{figure}
+
+You can also see a short video on \href{YouTube}{TODO!}
 
 \end{document}
