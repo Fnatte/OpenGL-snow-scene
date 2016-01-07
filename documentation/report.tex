@@ -63,30 +63,21 @@ There were some pretty sophisticated models used in the Disney film Frozen \href
 
 \subsection{Shadows}
 
+As we can see in Figure~\ref{fig:youtube} the snow casts almost no shadows themselves, this could either be due to the quality of the image or quite simply because snow flakes are quite translucent. On the other hand the lamp post and the tree creates distinct shadows on the ground.
+
 
 \subsubsection{Shadow stensils}
 
+We decided against using shadow volumes as we had absolutely no need for pixel perfect edges for shadows on the ground. On the contrary we want the shadows cast by the snow to be very soft.
+
 \subsubsection{Shadow Maps}
 
-Shadow maps are achieved by rendering a depth map from the viewport of the light source and then using it in the the shading of the real render from the camera viewport:
-
-\begin{lstlisting}[label=lst:shadow-shaing,caption=How the shadow buffer is used to shade the real world.]
-float getShadow() {
-  vec4 shadowCoordinateWdivide = lightSourceCoord / lightSourceCoord.w;
-  shadowCoordinateWdivide.z -= 0.002;
-  float distanceFromLight = texture(shadowMap, shadowCoordinateWdivide.st).x;
-    distanceFromLight = (distanceFromLight-0.5) * 2.0;
-  float shadow = 1.0; // 1.0 = no shadow
-  if (lightSourceCoord.w > 0.0)
-    if (distanceFromLight < shadowCoordinateWdivide.z)
-      shadow = 0.2;
-  return shadow;
-}
-\end{lstlisting}
-
+Shadow maps are achieved by rendering a depth map from the viewport of the light source and then using it in the the shading of the real render from the camera viewport.
 
 
 \subsection{Falling snow}
+
+
 
 \subsubsection{Navier Stokes}
 
