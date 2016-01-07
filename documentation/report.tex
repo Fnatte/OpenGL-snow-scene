@@ -77,7 +77,7 @@ Shadow maps are achieved by rendering a depth map from the viewport of the light
 
 \subsection{Falling snow}
 
-
+Falling snow is often implemented as some sort of particle system.
 
 \subsubsection{Navier Stokes}
 
@@ -237,6 +237,7 @@ This places a square in front of the camera displaying the depth buffer we want 
   \caption{\label{fig:fbo-image} The depth buffer from a street light.}
 \end{figure}
 
+Everything not completely white in Figure~\ref{fig:fbo-image} will be considered shadowed.
 
 
 
@@ -250,10 +251,13 @@ We've probably refactored the codebase completelely somewhere around three times
 
 \subsection{Shadow buffer bugs}
 
-We ended up wasting about a week trying to debug a fully working implementation of shadow maps, only that it didn't render correct on the specific hardware we were developing it on.
+We ended up wasting about a week doing nothing but trying to debug a fully working implementation of shadow maps, only that it didn't render correct on the specific hardware we were developing it on.
+
 
 
 \section{Conclusions}
+
+``The wrong man in the right place, can make all the difference in the world'' as we know from the writings of our Lord and Saviour Gabe Newell in the annals of Half Life 2. In our project we absolutely encountered a lot of very basic issues such as placing items in the world, simply because we had to write a lot from scratch. More than anything else we've realised the wisdom in the quote ``Write a game, not a game engine''. If we were to actually make a computer game at any point in our lives we will, with the experience of this course in our backpack, seriously consider utilizing existing libraries or existing game engines. Because if you don't you end up, like us, never getting to work on the stuff you're actually interesting in; only working on the tedious neccecities which facilitate what you want to do.
 
 What we got was this:
 
