@@ -1,5 +1,6 @@
 #include <GL/glew.h>
 #include <assert.h>
+#include <stdio.h>
 
 #include "libraries/GLUtilities.h"
 
@@ -18,11 +19,14 @@ static GLint materialLocation;
 static GLint normalMapLocation;
 static GLint shadowMapLocation;
 
-static GLint lightPositionLocation;
-static GLint lightIntensitiesLocation;
-static GLint lightAmbientCoefficientLocation;
-static GLint lightConeAngleLocation;
-static GLint lightConeDirectionLocation;
+static GLint nrLightsLocation;
+static GLint lightPositionLocation[MAX_LIGHTS];
+static GLint lightIntensitiesLocation[MAX_LIGHTS];
+static GLint lightAmbientCoefficientLocation[MAX_LIGHTS];
+static GLint lightConeAngleLocation[MAX_LIGHTS];
+static GLint lightConeDirectionLocation[MAX_LIGHTS];
+
+
 
 void initializeFullShader() {
 	fullProgram = loadShaders("shaders/full.vert", "shaders/full.frag");
@@ -34,12 +38,21 @@ void initializeFullShader() {
 	materialLocation = glGetUniformLocation(fullProgram, "material");
 	normalMapLocation = glGetUniformLocation(fullProgram, "normalMap");
 	shadowMapLocation = glGetUniformLocation(fullProgram, "shadowMap");
+	nrLightsLocation = glGetUniformLocation(fullProgram, "nrLights");
 
-	lightPositionLocation = glGetUniformLocation(fullProgram, "light.position");
-	lightIntensitiesLocation = glGetUniformLocation(fullProgram, "light.intensities");
-	lightAmbientCoefficientLocation = glGetUniformLocation(fullProgram, "light.ambientCoefficient");
-	lightConeAngleLocation = glGetUniformLocation(fullProgram, "light.coneAngle");
-	lightConeDirectionLocation = glGetUniformLocation(fullProgram, "light.coneDirection");
+	char name[100];
+	for (int i = 0; i < MAX_LIGHTS; i++) {
+		sprintf(name, "light[%d].position", i);
+		lightPositionLocation[i] = glGetUniformLocation(fullProgram, name);
+		sprintf(name, "light[%d].intensities", i);
+		lightIntensitiesLocation[i] = glGetUniformLocation(fullProgram, name);
+		sprintf(name, "light[%d].ambientCoefficient", i);
+		lightAmbientCoefficientLocation[i] = glGetUniformLocation(fullProgram, name);
+		sprintf(name, "light[%d].coneAngle", i);
+		lightConeAngleLocation[i] = glGetUniformLocation(fullProgram, name);
+		sprintf(name, "light[%d].coneDirection", i);
+		lightConeDirectionLocation[i] = glGetUniformLocation(fullProgram, name);
+	}
 
 	assert(cameraLocation >= 0);
 	assert(modelLocation >= 0);
@@ -47,6 +60,7 @@ void initializeFullShader() {
 	assert(materialLocation >= 0);
 	// assert(normalMapLocation >= 0); Not used yet
 	assert(shadowMapLocation >= 0);
+	assert(nrLightsLocation >= 0);
 
 	glUseProgram(fullProgram);
 	glUniform1i(materialLocation, 0);
@@ -54,16 +68,16 @@ void initializeFullShader() {
 	glUniform1i(shadowMapLocation, 4);
 }
 
-static void setLightUniform(struct ShaderLight *light) {
-	glUniform3f(lightPositionLocation, light->position.x, light->position.y, light->position.z);
-	glUniform3f(lightIntensitiesLocation, light->intensities.x, light->intensities.y, light->intensities.z);
-	glUniform3f(lightConeDirectionLocation, light->coneDirection.x, light->coneDirection.y, light->coneDirection.z);
-	glUniform1f(lightAmbientCoefficientLocation, light->ambientCoefficient);
-	glUniform1f(lightConeAngleLocation, light->coneAngle);
+static void setLightUniform(struct ShaderLight *light, int index) {
+	glUniform3f(lightPositionLocation[index], light->position.x, light->position.y, light->position.z);
+	glUniform3f(lightIntensitiesLocation[index], light->intensities.x, light->intensities.y, light->intensities.z);
+	glUniform3f(lightConeDirectionLocation[index], light->coneDirection.x, light->coneDirection.y, light->coneDirection.z);
+	glUniform1f(lightAmbientCoefficientLocation[index], light->ambientCoefficient);
+	glUniform1f(lightConeAngleLocation[index], light->coneAngle);
 }
 
 void drawFull(Model *m, mat4 cameraTransform, mat4 modelTransform, mat4 shadowMapTransform, GLuint texture,
-			  GLuint shadowMap, struct Light* light, vec3 cameraPosition) {
+              GLuint shadowMap, struct StreetLight* lights, int nrLights, vec3 cameraPosition) {
 	mat4 shadowMapModelTransform = Mult(shadowMapTransform, modelTransform);
 
 	// Bind textures
@@ -79,9 +93,12 @@ void drawFull(Model *m, mat4 cameraTransform, mat4 modelTransform, mat4 shadowMa
 	glUniformMatrix4fv(modelLocation, 1, GL_TRUE, modelTransform.m);
 	glUniformMatrix4fv(shadowMapTransformLocation, 1, GL_TRUE, shadowMapModelTransform.m);
 
-	// Set light uniform
-	struct ShaderLight shaderLight = getShaderLight(light);
-	setLightUniform(&shaderLight);
+	glUniform1i(nrLightsLocation, nrLights);
+	// Set light uniforms.
+	for (int i = 0; i < nrLights; i++) {
+		struct ShaderLight shaderLight = getShaderLight(&lights[i].lamp);
+		setLightUniform(&shaderLight, i);
+	}
 
 	// Vertex positions.
 	glBindVertexArray(m->vao);
