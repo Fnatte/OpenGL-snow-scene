@@ -111,12 +111,12 @@ void renderScene(void) {
 		drawModelInstanced(modelCube, cameraTransform,
 		                   Tvec3(VectorAdd(lights[i].position, snowPosRelativeLight)), &lights[i].lamp);
 		drawFull(modelLightPost, cameraTransform, Tvec3(lights[i].position),
-		         shadowMapTransforms[i], textureMetal,
-		         fbos[i]->depth, lights, NR_STREET_LIGHTS, userCamera.base.position);
+		         shadowMapTransforms, textureMetal, fbos, lights,
+		         NR_STREET_LIGHTS, userCamera.base.position);
 		printError("Draw me like one of your italian girls");
 	}
-	drawFull(modelPlane, cameraTransform, S(10.0, 10.0, 10.0), shadowMapTransforms[0],
-	         textureGroundDiffuse, fbos[0]->depth, lights, NR_STREET_LIGHTS, userCamera.base.position);
+	drawFull(modelPlane, cameraTransform, S(10.0, 10.0, 10.0), shadowMapTransforms,
+	         textureGroundDiffuse, fbos, lights, NR_STREET_LIGHTS, userCamera.base.position);
 
 	// Toggle display FBO with 'f'.
 	int displayFBOKeyIsDown = keyIsDown('f');

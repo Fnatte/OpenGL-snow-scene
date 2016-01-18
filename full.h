@@ -11,5 +11,5 @@ GLuint fullProgram;
 
 
 void initializeFullShader();
-void drawFull(Model *m, mat4 cameraTransform, mat4 modelTransform, mat4 shadowMapTransform, GLuint texture,
-              GLuint shadowMap, struct StreetLight* light, int nrLights, vec3 cameraPosition);
+void drawFull(Model *m, mat4 cameraTransform, mat4 modelTransforms, mat4* shadowMapTransform, GLuint texture,
+              FBOstruct** shadowMaps, struct StreetLight* light, int nrLights, vec3 cameraPosition);

@@ -2,7 +2,7 @@
 
 #define MAX_LIGHTS 10
 
-in vec4 lightSourceCoord;
+in vec4 lightSourceCoord[MAX_LIGHTS];
 in vec2 fragTexCoord;
 in vec3 fragPosition;
 in vec3 fragNormal;
@@ -11,9 +11,9 @@ uniform vec3 cameraPosition;
 uniform mat4 model;
 uniform sampler2D material;
 uniform sampler2D normalMap;
-uniform sampler2D shadowMap;
-uniform int nrLights;
+uniform sampler2D shadowMap[MAX_LIGHTS];
 
+uniform int nrLights;
 uniform struct Light {
 	vec3 position;
 	vec3 intensities;
@@ -50,16 +50,16 @@ vec3 applyLight(Light light, vec3 surfaceColor, vec3 normal, vec3 surfacePos, ve
 	return ambient + shadow * attenuation * (diffuse + specular);
 }
 
-float getShadow() {
+float getShadow(int index) {
 	// Perform perspective division to get the actual texture position
-	vec4 shadowCoordinateWdivide = lightSourceCoord / lightSourceCoord.w;
+	vec4 shadowCoordinateWdivide = lightSourceCoord[index] / lightSourceCoord[index].w;
 
 	// Used to lower moire' pattern and self-shadowing
 	// The optimal value here will vary with different GPU's depending on their Z buffer resolution.
 	shadowCoordinateWdivide.z -= 0.002;
 
 	// Look up the depth value
-	float distanceFromLight = texture(shadowMap, shadowCoordinateWdivide.st).x;
+	float distanceFromLight = texture(shadowMap[index], shadowCoordinateWdivide.st).x;
 	distanceFromLight = (distanceFromLight-0.5) * 2.0;
 
 	// NOTE: This distance look-up disturbs me. It is too simple. It should really
@@ -72,7 +72,7 @@ float getShadow() {
 	// Compare
 	float shadow = 1.0; // 1.0 = no shadow
 
-	if (lightSourceCoord.w > 0.0)
+	if (lightSourceCoord[index].w > 0.0)
 		if (distanceFromLight < shadowCoordinateWdivide.z) // shadow
 			shadow = 0.2;
 
@@ -88,7 +88,7 @@ void main() {
 
 	outColor = vec4(0);
 	for (int i = 0; i < nrLights; i++) {
-		outColor += vec4(applyLight(light[i], surfaceColor.rgb, normal, surfacePos, surfaceToCamera, getShadow()),
+		outColor += vec4(applyLight(light[i], surfaceColor.rgb, normal, surfacePos, surfaceToCamera, getShadow(i)),
 		                 surfaceColor.a);
 	}
 }
