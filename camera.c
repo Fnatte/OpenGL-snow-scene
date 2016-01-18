@@ -91,6 +91,7 @@ void moveCameraOnKeyboard(struct Camera *c) {
 	vec3 dir = cameraDirection(c);
 
 	float speed = keyIsDown('x') ? 10.0f : 1.0f;
+	if (keyIsDown('<')) speed = 0.1;
 	forward = ScalarMult(dir, speed);
 	leftV = ScalarMult(Normalize(CrossProduct(dir, c->normal)), speed);
 
