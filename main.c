@@ -50,7 +50,7 @@ void initUserCamera() {
 
 void initStreetLights() {
 	lights[0] = createStreetLight((vec3){0.0, 0.0, 0.0});
-	lights[1] = createStreetLight((vec3){-80.0, 0.1, -80.0});
+	lights[1] = createStreetLight((vec3){-30.0, 0.1, -30.0});
 }
 
 
@@ -106,6 +106,8 @@ void renderScene(void) {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	}
 	drawSkybox(cameraTransform);
+	drawFull(modelPlane, cameraTransform, S(5.0, 10.0, 10.0), shadowMapTransforms,
+	         textureGroundDiffuse, fbos, lights, NR_STREET_LIGHTS, userCamera.base.position);
 	for (unsigned int i = 0; i < NR_STREET_LIGHTS; i++) {
 		useFBO(NULL, fbos[i], NULL);
 		drawModelInstanced(modelCube, cameraTransform,
@@ -115,8 +117,7 @@ void renderScene(void) {
 		         NR_STREET_LIGHTS, userCamera.base.position);
 		printError("Draw me like one of your italian girls");
 	}
-	drawFull(modelPlane, cameraTransform, S(10.0, 10.0, 10.0), shadowMapTransforms,
-	         textureGroundDiffuse, fbos, lights, NR_STREET_LIGHTS, userCamera.base.position);
+
 
 	// Toggle display FBO with 'f'.
 	int displayFBOKeyIsDown = keyIsDown('f');
@@ -178,6 +179,8 @@ int main(int argc, char** argv) {
 	glClearColor(0,0,0,1.0f);
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	glutDisplayFunc(renderScene);
 	glutTimerFunc(16, &onTimer, 0);
