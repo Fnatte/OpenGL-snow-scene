@@ -110,6 +110,9 @@ void renderScene(void) {
 		useFBO(NULL, fbos[i], NULL);
 		drawModelInstanced(modelCube, cameraTransform,
 		                   Tvec3(VectorAdd(lights[i].position, snowPosRelativeLight)), &lights[i].lamp);
+		drawFull(modelLightPost, cameraTransform, Tvec3(lights[i].position),
+		         shadowMapTransforms[i], textureMetal,
+		         fbos[i]->depth, &lights[i].lamp, userCamera.base.position);
 		drawFull(modelPlane, cameraTransform, Mult(Tvec3(lights[i].position), T(0.0, 0.0, -15.0)),
 		         shadowMapTransforms[i], textureGroundDiffuse,
 		         fbos[i]->depth, &lights[i].lamp, userCamera.base.position);
