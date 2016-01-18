@@ -56,7 +56,9 @@ float getShadow(int index) {
 
 	// Used to lower moire' pattern and self-shadowing
 	// The optimal value here will vary with different GPU's depending on their Z buffer resolution.
-	shadowCoordinateWdivide.z -= 0.002;
+	shadowCoordinateWdivide.x -= 0.00001;
+	shadowCoordinateWdivide.y -= 0.00001;
+	shadowCoordinateWdivide.z -= 0.00005;
 
 	// Look up the depth value
 	float distanceFromLight = texture(shadowMap[index], shadowCoordinateWdivide.st).x;

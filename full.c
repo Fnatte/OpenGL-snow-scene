@@ -6,6 +6,7 @@
 
 #include "full.h"
 
+
 static GLuint positionLocation = 0;
 static GLuint normalLocation   = 1;
 static GLuint textureLocation  = 2;
@@ -25,7 +26,6 @@ static GLint lightIntensitiesLocation[MAX_LIGHTS];
 static GLint lightAmbientCoefficientLocation[MAX_LIGHTS];
 static GLint lightConeAngleLocation[MAX_LIGHTS];
 static GLint lightConeDirectionLocation[MAX_LIGHTS];
-
 
 
 void initializeFullShader() {
