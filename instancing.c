@@ -17,7 +17,7 @@ static GLuint instanceTransBuffer;
 
 static GLuint positionLocation = 0;
 static GLuint normalLocation   = 1;
-//static GLuint textureLocation  = 2;
+static GLuint textureLocation  = 2;
 static GLuint instanceLocation  = 3;
 
 static GLint cameraLocation;
@@ -44,7 +44,7 @@ void initializeInstancingShader(int _count) {
 
 	cameraLocation = glGetUniformLocation(instancingProgram, "camera");
 	modelLocation = glGetUniformLocation(instancingProgram, "model");
-	//materialLocation = glGetUniformLocation(instancingProgram, "material");
+	materialLocation = glGetUniformLocation(instancingProgram, "material");
 
 	lightPositionLocation = glGetUniformLocation(instancingProgram, "light.position");
 	lightIntensitiesLocation = glGetUniformLocation(instancingProgram, "light.intensities");
@@ -85,7 +85,7 @@ static void createInstanceTransforms(mat4 *transforms, float time) {
 						(x - count/2) * volumeSize.x / particleSize + (0.5f - rand.x) * volumeSize.x * 6.0f,
 					-fmodf((y - count/2) * volumeSize.y / particleSize + (0.5f - rand.y) * volumeSize.y * 6.0f + fallOffset, 200.0f),
 						-fmodf((z - count/2) * volumeSize.z / particleSize + (0.5f - rand.z) * volumeSize.z * 6.0f + fallOffset * 0.5, volumeSize.z * 25.0));
-				mat4 rotation = Mult(Rx(time * 2.5 * rand.y), Rz(time * 2.0 * rand.x));
+				mat4 rotation = Rx(.5f);
 				mat4 scale = S(particleSize, particleSize, particleSize);
 
 
@@ -95,7 +95,7 @@ static void createInstanceTransforms(mat4 *transforms, float time) {
 	}
 }
 
-void drawModelInstanced(Model *m, mat4 cameraTransform, mat4 modelTransform, struct Light* light) {
+void drawModelInstanced(Model *m, GLuint texture, mat4 cameraTransform, mat4 modelTransform, struct Light* light) {
 	double time = glutGet(GLUT_ELAPSED_TIME) / 1000.0;
 
 	// Generate data.
@@ -105,8 +105,8 @@ void drawModelInstanced(Model *m, mat4 cameraTransform, mat4 modelTransform, str
 	glUseProgram(instancingProgram);
 
 	// Bind textures
-//	glActiveTexture(GL_TEXTURE0 + 0);
-//	glBindTexture(GL_TEXTURE_2D, texture);
+	glActiveTexture(GL_TEXTURE0 + 0);
+	glBindTexture(GL_TEXTURE_2D, texture);
 
 	glUniformMatrix4fv(cameraLocation, 1, GL_TRUE, cameraTransform.m);
 	glUniformMatrix4fv(modelLocation, 1, GL_TRUE, modelTransform.m);
@@ -127,9 +127,9 @@ void drawModelInstanced(Model *m, mat4 cameraTransform, mat4 modelTransform, str
 	glEnableVertexAttribArray(normalLocation);
 
 	// Texture coordinates.
-//	glBindBuffer(GL_ARRAY_BUFFER, m->tb);
-//	glVertexAttribPointer(textureLocation, 2, GL_FLOAT, GL_FALSE, 0, 0);
-//	glEnableVertexAttribArray(textureLocation);
+	glBindBuffer(GL_ARRAY_BUFFER, m->tb);
+	glVertexAttribPointer(textureLocation, 2, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(textureLocation);
 
 	// Upload instance transforms
 	glBindBuffer(GL_ARRAY_BUFFER, instanceTransBuffer);

@@ -95,7 +95,7 @@ void renderScene(void) {
 	for (unsigned int i = 0; i < NR_STREET_LIGHTS; i++) {
 		useFBO(fbos[i], NULL, NULL);
 		drawPlain(modelLightPost, lightTransforms[i], Tvec3(lights[i].position));
-		drawModelInstanced(modelCube, lightTransforms[i], Tvec3(VectorAdd(lights[i].position, snowPosRelativeLight)), &lights[i].lamp);
+		drawModelInstanced(modelDcone, textureSnow, lightTransforms[i], Tvec3(VectorAdd(lights[i].position, snowPosRelativeLight)), &lights[i].lamp);
 		printError("Draw me like one of your french girls");
 	}
 
@@ -110,7 +110,7 @@ void renderScene(void) {
 	         textureGroundDiffuse, fbos, lights, NR_STREET_LIGHTS, userCamera.base.position);
 	for (unsigned int i = 0; i < NR_STREET_LIGHTS; i++) {
 		useFBO(NULL, fbos[i], NULL);
-		drawModelInstanced(modelCube, cameraTransform,
+		drawModelInstanced(modelDcone, textureSnow, cameraTransform,
 		                   Tvec3(VectorAdd(lights[i].position, snowPosRelativeLight)), &lights[i].lamp);
 		drawFull(modelLightPost, cameraTransform, Tvec3(lights[i].position),
 		         shadowMapTransforms, textureMetal, fbos, lights,

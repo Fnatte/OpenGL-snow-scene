@@ -4,8 +4,10 @@
 in vec3 fragPosition;
 in vec3 fragNormal;
 in mat4 fragInstanceTrans;
+in vec2 fragTexCoord;
 
 uniform mat4 model;
+uniform sampler2D material;
 
 out vec4 outColor;
 
@@ -49,8 +51,9 @@ void main(void) {
 	vec3 normal = normalize(transpose(inverse(mat3(modelInstance))) * fragNormal);
 
 	vec3 surfacePos = vec3(modelInstance * vec4(fragPosition, 1));
-	vec4 surfaceColor = vec4(1, 1, 1, 0.8);
+	vec4 surfaceColor = texture(material, fragTexCoord);
+
 
 	outColor = vec4(applyLight(light, surfaceColor.rgb, normal, surfacePos),
-	                surfaceColor.a);
+	                 surfaceColor.a);
 }
