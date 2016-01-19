@@ -61,7 +61,8 @@ float getShadow(int index) {
 	shadowCoordinateWdivide.z -= 0.00005;
 
 	// Look up the depth value
-	float distanceFromLight = texture(shadowMap[index], shadowCoordinateWdivide.st).x;
+	float distanceFromLight = 0;
+	distanceFromLight = texture(shadowMap[index], shadowCoordinateWdivide.st).x;
 	distanceFromLight = (distanceFromLight-0.5) * 2.0;
 
 	// NOTE: This distance look-up disturbs me. It is too simple. It should really
@@ -71,12 +72,10 @@ float getShadow(int index) {
 	// This is regrettable and I will correct this when I have time. In the meantime
 	// I do not want to withhold the demo. /Ingemar
 
-	// Compare
 	float shadow = 1.0; // 1.0 = no shadow
-
 	if (lightSourceCoord[index].w > 0.0)
-		if (distanceFromLight < shadowCoordinateWdivide.z) // shadow
-			shadow = 0.2;
+		if (distanceFromLight < shadowCoordinateWdivide.z)
+			shadow = 0.001 / (distanceFromLight - shadowCoordinateWdivide.z) + 0.8;
 
 	return shadow;
 }

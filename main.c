@@ -50,7 +50,7 @@ void initUserCamera() {
 
 void initStreetLights() {
 	lights[0] = createStreetLight((vec3){0.0, 0.0, 0.0});
-	lights[1] = createStreetLight((vec3){-30.0, 0.1, -30.0});
+	lights[1] = createStreetLight((vec3){-40.0, 0.1, 0.0});
 }
 
 
