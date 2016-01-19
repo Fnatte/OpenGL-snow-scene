@@ -5,7 +5,7 @@ void loadContent() {
 	modelPlane = LoadModelPlus("./models/plane.obj");
 	modelSkybox = LoadModelPlus("./models/skybox.obj");
 	modelLightPost = LoadModelPlus("./models/gatlykta.obj");
-	modelDcone = LoadModelPlus("./models/dcone.obj");
+	modelDcone = LoadModelPlus("./models/snow.obj");
 
 	LoadTGATextureSimple("./textures/ground/diffuse.tga", &textureGroundDiffuse);
 	LoadTGATextureSimple("./textures/ground/specular.tga", &textureGroundSpecular);
