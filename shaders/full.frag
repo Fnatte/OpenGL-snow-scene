@@ -12,7 +12,6 @@ uniform mat4 model;
 uniform sampler2D material;
 uniform sampler2D normalMap;
 uniform sampler2D shadowMap[MAX_LIGHTS];
-
 uniform int nrLights;
 uniform struct Light {
 	vec3 position;
@@ -23,6 +22,13 @@ uniform struct Light {
 } light[MAX_LIGHTS];
 
 out vec4 outColor;
+
+
+vec2 poissonDisk[4] =
+	vec2[](vec2( -0.94201624,  -0.39906216 ),
+	       vec2( 0.94558609,   -0.76890725 ),
+	       vec2( -0.094184101, -0.92938870 ),
+	       vec2( 0.34495938,    0.29387760 ));
 
 
 vec3 applyLight(Light light, vec3 surfaceColor, vec3 normal, vec3 surfacePos, vec3 surfaceToCamera, float shadow) {
@@ -60,23 +66,16 @@ float getShadow(int index) {
 	shadowCoordinateWdivide.y -= 0.00001;
 	shadowCoordinateWdivide.z -= 0.00005;
 
-	// Look up the depth value
-	float distanceFromLight = 0;
-	distanceFromLight = texture(shadowMap[index], shadowCoordinateWdivide.st).x;
-	distanceFromLight = (distanceFromLight-0.5) * 2.0;
-
-	// NOTE: This distance look-up disturbs me. It is too simple. It should really
-	// use the camera parameters to correctly restore the actual distance.
-	// For the moment I don't have time to fix this. The demo works, but it
-	// may have hit some constants that are correct more by luck than skill.
-	// This is regrettable and I will correct this when I have time. In the meantime
-	// I do not want to withhold the demo. /Ingemar
-
 	float shadow = 1.0; // 1.0 = no shadow
-	if (lightSourceCoord[index].w > 0.0)
-		if (distanceFromLight < shadowCoordinateWdivide.z)
-			shadow = 0.001 / (distanceFromLight - shadowCoordinateWdivide.z) + 0.8;
+	for (int i = 0; i < 1; i++) {
+		float distanceFromLight =  texture(shadowMap[index], shadowCoordinateWdivide.st + poissonDisk[i] / 700.0).x;
+		distanceFromLight = (distanceFromLight-0.5) * 2.0;
 
+		if (lightSourceCoord[index].w > 0.0)
+			if (distanceFromLight < shadowCoordinateWdivide.z)
+				shadow -= 0.005 / (shadowCoordinateWdivide.z - distanceFromLight);
+	}
+	shadow = clamp(shadow, 0.2, 1.0);
 	return shadow;
 }
 
