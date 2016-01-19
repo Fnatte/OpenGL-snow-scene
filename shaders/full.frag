@@ -31,6 +31,13 @@ vec2 poissonDisk[4] =
 	       vec2( 0.34495938,    0.29387760 ));
 
 
+float random(vec3 seed, int i) {
+	vec4 seed4 = vec4(seed, i);
+	float dot_product = dot(seed4, vec4(12.9898,78.233,45.164,94.673));
+	return fract(sin(dot_product) * 43758.5453);
+}
+
+
 vec3 applyLight(Light light, vec3 surfaceColor, vec3 normal, vec3 surfacePos, vec3 surfaceToCamera, float shadow) {
 	float materialShininess = 1.0;
 	vec3 materialSpecularColor = vec3(0.25);
@@ -67,13 +74,14 @@ float getShadow(int index) {
 	shadowCoordinateWdivide.z -= 0.00005;
 
 	float shadow = 1.0; // 1.0 = no shadow
-	for (int i = 0; i < 1; i++) {
-		float distanceFromLight =  texture(shadowMap[index], shadowCoordinateWdivide.st + poissonDisk[i] / 700.0).x;
+	for (int i = 0; i < 4; i++) {
+		int randomIndex = int(4.0 * random(gl_FragCoord.xyy, i)) % 4;
+		float distanceFromLight =  texture(shadowMap[index], shadowCoordinateWdivide.st + poissonDisk[randomIndex] / 1000.0).x;
 		distanceFromLight = (distanceFromLight-0.5) * 2.0;
 
 		if (lightSourceCoord[index].w > 0.0)
 			if (distanceFromLight < shadowCoordinateWdivide.z)
-				shadow -= 0.005 / (shadowCoordinateWdivide.z - distanceFromLight);
+				shadow -= 0.001 / (shadowCoordinateWdivide.z - distanceFromLight);
 	}
 	shadow = clamp(shadow, 0.2, 1.0);
 	return shadow;
