@@ -5,6 +5,7 @@
 \usepackage{graphicx}
 \usepackage{listings}
 \usepackage{hyperref}
+\usepackage{float}
 \lstset{
 language=C,
 basicstyle=\scriptsize
@@ -12,7 +13,6 @@ basicstyle=\scriptsize
 
 \title{Let it snow}
 \author{Christian Luckey \\ Matteus Hemström}
-
 
 \begin{document}
 
@@ -31,8 +31,6 @@ We set out with one simple task: We wanted to make it snow with real time graphi
 \end{figure}
 \noindent
 And off we went!
-
-
 
 \section{Background}
 
@@ -58,7 +56,7 @@ We looked into a couple of different techniques when it came to making the light
 
 \subsection{Snow on the ground}
 
-There were some pretty sophisticated models used in the Disney film Frozen \href{https://disney-animation.s3.amazonaws.com/uploads/production/publication_asset/94/asset/SSCTS13_2.pdf}{[1]}, but we deemed them unfit for real time usage. Then again the reference image has no moving ground snow.
+There were some pretty sophisticated models used in the Disney film Frozen \cite{disney-snow}, but we deemed them unfit for real time usage. Then again the reference image has no moving ground snow.
 
 
 \subsection{Shadows}
@@ -81,8 +79,7 @@ Falling snow is often implemented as some sort of particle system.
 
 \subsubsection{Navier Stokes}
 
-In order to simulate the effect of gusts of wind blowing on the snow navier stokes equations could be used \href{http://www.intpowertechcorp.com/GDC03.pdf}{[2]}. The linked paper is about fluid dynamics but since they're pretty much the same we're sure the methods described could still be applied.
-
+In order to simulate the effect of gusts of wind blowing on the snow navier stokes equations could be used \cite{fluid-dynamics}. The linked paper is about fluid dynamics but since they are pretty much the same we are sure the methods described could still be applied.
 
 
 
@@ -101,7 +98,7 @@ void drawPlain(Model* m, mat4 modelViewProjectionTransform, mat4 modelTransform)
 
 The most simple of our shaders called by \emph{drawPlain} takes only the pointer to a model, a transform from the model coordinate system to that of the camera, and finally a matrix for placing and morphing the model within the world.
 
-If we take a walk into the function in Listing~\ref{lst:drawPlain} it does what you'd expect. The code for \emph{drawFull} and all the others are similarily dull.
+If we take a walk into the function in Listing~\ref{lst:drawPlain} it does what you would expect. The code for \emph{drawFull} and all the others are similarily dull.
 
 \begin{lstlisting}[label=lst:drawPlain,caption= The contents of the drawPlain function.]
 void drawPlain(Model *m, mat4 cameraTransform, mat4 modelTransform) {
@@ -121,10 +118,10 @@ void drawPlain(Model *m, mat4 cameraTransform, mat4 modelTransform) {
 }
 \end{lstlisting}
 
-What might be of interest is the shader code itself, we'll get to that in the following chapters.
+What might be of interest is the shader code itself, we will get to that in the following chapters.
 
 
-\subsection{Shadow maps}
+\subsection{Lighting and shadow maps}
 
 Something which eased our work was the realization that a camera and a light source have a lot of commonalities:
 
@@ -148,9 +145,9 @@ This made it possible for us to position and rotate the light sources using the 
 
 Other than that there is nothing surprising in our implementation of shadow maps. We draw the the depth map with the simplest shader possible after which we use the resulting FBO.
 
-Our implementation of shadow maps stems from (TODO: Matteus, minns du vad vi tog den ifrån?).
+Our implementation of shadow maps stems from the course content and an OpenGL article ~\cite{shadow-maps-tutorial} found online.
 
-The vertex shaders does nothing interesting with the geometry, so we'll jump straight into the full fragment shader. In Listing~\ref{lst:shader-light-struct} we see the struct passed on to the shader.
+The vertex shaders does nothing interesting with the geometry, so we will jump straight into the full fragment shader. In Listing~\ref{lst:shader-light-struct} we see the struct passed on to the shader.
 
 \begin{lstlisting}[label=lst:shader-light-struct,caption= The light struct received in the shader.]
 uniform struct Light {
@@ -217,7 +214,7 @@ float getShadow() {
 
 \subsection{FBO debugging}
 
-We implemented the display of FBO's so that we could see what was drawn into them. As we can see in Listing~\ref{lst:fbo-code} we're able to reuse our normal drawing code for the debugging.
+We implemented the display of FBO's so that we could see what was drawn into them. As we can see in Listing~\ref{lst:fbo-code} we are able to reuse our normal drawing code for the debugging.
 
 \begin{lstlisting}[label=lst:fbo-code,caption= Switching between the FBO's]
 int displayFBOKeyIsDown = keyIsDown('f');
@@ -239,6 +236,17 @@ This places a square in front of the camera displaying the depth buffer we want 
 
 Everything not completely white in Figure~\ref{fig:fbo-image} will be considered shadowed.
 
+\subsection{Snowfall}
+Even though the geometry shader is preferable for particle systems, we chose to implement the vertex generation and movement on the CPU because of simplicity. If we instead had utilized the geometry shader we could have increased the number of snow particles without a major performance hit.
+
+The vertex shader for the snowfall contains nothing of interest. The fragment shader is very similar to the full shader (which is used to render the street lamp), the most visually apparent difference is that the snow particles are rendered without shadows.
+
+The model for the snow particles is a double cone as shown in Figure~\ref{fig:dcone-image}. The idea of using a double cone comes from a paper by N. Wang et. al. \cite{snow-rain}. The model is rendered with a texture which makes the top and bottom edges transparent. N. Wang et. al. applies motion blur to elongate the particles, which we believe would improve our result further. We did not have the time to implement that however.
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.3\textwidth]{dcone}
+  \caption{\label{fig:dcone-image} The depth buffer from a street light.}
+\end{figure}
 
 
 \section{Problems}
@@ -247,17 +255,17 @@ A lot, like you have no idea how many problems we had.
 
 \subsection{Detangling global state}
 
-We've probably refactored the codebase completelely somewhere around three times, trying to untangle it from iself. The code we started out with, mostly based on old lab and project code with
+We have probably refactored the codebase completelely somewhere around three times, trying to untangle it from iself. The code we started out with, mostly based on old lab.
 
 \subsection{Shadow buffer bugs}
 
-We ended up wasting about a week doing nothing but trying to debug a fully working implementation of shadow maps, only that it didn't render correct on the specific hardware we were developing it on.
+We ended up wasting about a week doing nothing but trying to debug a fully working implementation of shadow maps, only that it did not render correctly on the specific hardware we were developing it on.
 
 
 
 \section{Conclusions}
 
-``The wrong man in the right place, can make all the difference in the world'' as we know from the writings of our Lord and Saviour Gabe Newell in the annals of Half Life 2. In our project we absolutely encountered a lot of very basic issues such as placing items in the world, simply because we had to write a lot from scratch. More than anything else we've realised the wisdom in the quote ``Write a game, not a game engine''. If we were to actually make a computer game at any point in our lives we will, with the experience of this course in our backpack, seriously consider utilizing existing libraries or existing game engines. Because if you don't you end up, like us, never getting to work on the stuff you're actually interesting in; only working on the tedious neccecities which facilitate what you want to do.
+``The wrong man in the right place, can make all the difference in the world'' as we know from the writings of our Lord and Saviour Gabe Newell in the annals of Half Life 2. In our project we absolutely encountered a lot of very basic issues such as placing items in the world, simply because we had to write a lot from scratch. More than anything else we have realised the wisdom in the quote ``Write a game, not a game engine''. If we were to actually make a computer game at any point in our lives we will, with the experience of this course in our backpack, seriously consider utilizing existing libraries or existing game engines. Because if you do not you end up, like us, never getting to work on the stuff you are actually interesting in; only working on the tedious neccecities which facilitate what you want to do.
 
 What we got was this:
 
@@ -268,5 +276,33 @@ What we got was this:
 \end{figure}
 
 You can also see a short video on \href{YouTube}{TODO!}
+
+\newpage
+
+\begin{thebibliography}{9}
+  \bibitem{shadow-maps-tutorial}
+    Opengl-tutorial.org.
+    \emph{Tutorial 16 : Shadow mapping}.
+    2016.
+    Available: \url{http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-16-shadow-mapping/.}
+    Accessed: 2016-01-20 
+
+  \bibitem{disney-snow}
+    Stomakhin, Alexey, Craig Schroeder, Lawrence Chai, Joseph Teran, and Andrew Selle.
+    \emph{A Material Point Method for Snow Simulation.}
+    TOG 32.4 (2013): 1
+
+  \bibitem{fluid-dynamics}
+    Stam, J. (2003).
+    \emph{Real-Time Fluid Dynamics for Games.}
+    Proceedings of the Game Developer Conference, 18(11), 17. doi:10.1.1.12.6736
+
+  \bibitem{snow-rain}
+    Wang, N., \& Wade, B. (2004).
+    \emph{Rendering Falling Rain and Snow.}
+    ACM SIGGRAPH 2004 Sketches, (sketches 0186), 14. doi:10.1145/1186223.1186241
+
+\end{thebibliography}
+
 
 \end{document}
