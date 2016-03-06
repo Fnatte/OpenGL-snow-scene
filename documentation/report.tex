@@ -65,23 +65,36 @@ Overlapping of these light cones means either two things:
 \begin{itemize}
 \item Forward rendering:
 
-  Each object has to be drawn
+  Lighting calculations are made for every object with regards to every light source in the scene. This makes for a complete time complexety of O(nr\_objects * nr\_lights).
+
+\item Deferred rendering:
+
+  Lighting calculations are deferred, as the name implies, until the scene geometry is rendered. This means that depth tests can be used to remove the light calculations of occluded objects.
 \end{itemize}
+
+The latter is of course more performant in larger scenes with many light sources. On the other hand its implementation isn't necessarily straight forward.
 
 
 \subsection{Snow on the ground}
 
-There were some pretty sophisticated models used in the Disney film Frozen \cite{disney-snow}, but we deemed them unfit for real time usage. Then again the reference image has no moving ground snow.
+There were some pretty sophisticated models used in the Disney film Frozen \cite{disney-snow}, but we deemed them unfit for real time usage.
+
+The reference video has in itself no moving snow on the ground, but its reasonable to assume that it looks odd if the snow simply falls through the ground.
 
 
 \subsection{Shadows}
 
-As we can see in Figure~\ref{fig:youtube} the snow casts almost no shadows themselves, this could either be due to the quality of the image or quite simply because snow flakes are quite translucent. On the other hand the lamp post and the tree creates distinct shadows on the ground.
+As we can see in Figure~\ref{fig:youtube} the snow casts almost no shadows themselves, this could either be due to the quality of the image or because snow flakes are quite translucent and reemit most of the light touching them. On the other hand the lamp post and the tree creates distinct shadows on the ground.
+
+The most interesting problem here is then to make a distinction between the very smooth shadows that we know, from real life experiences, snow casts on the ground and the very dark shadows of the solid objects. A somewhat ugly solution would be to simply not have the snow flakes cast any shadows.
 
 
-\subsubsection{Shadow stensils}
+\subsubsection{Shadow volumes}
+
+One can represent the shadows cast from a solid object when shone upon by a directed light as almost infinitely large geometry in the direction of the light. Wether other solid geometry intersects with these shadow volumes is then used to determine whether or not the objects has a shadow cast on it.
 
 We decided against using shadow volumes as we had absolutely no need for pixel perfect edges for shadows on the ground. On the contrary we want the shadows cast by the snow to be very soft.
+
 
 \subsubsection{Shadow Maps}
 
@@ -102,6 +115,7 @@ The movement of a fluid can be described by a velocity field. The Navier-Stokes 
 Looks fantastic while being less complex than increasing the resolution of the shadow map equivelently \href{https://www.youtube.com/watch?v=YSQDNy28SDM}{[3]}.
 
 
+
 \section{Implementation}
 
 With 3200 fresh lines of code our solution is split up into 10 C files and 10 shader programs. We do geometry instancing for the particle systems, shadow maps for the projection of shadows and proximity based directed lighting.
@@ -109,10 +123,18 @@ With 3200 fresh lines of code our solution is split up into 10 C files and 10 sh
 Our code is organized so that each pair of shaders has a corresponding C-file which deals with all the specifics of that shader, each C-file exposes a single entry point for each shader with the complexities hidden away:
 
 \begin{lstlisting}[label=lst:entry-points,caption= The entry points of each shader pair\, listed in decreasing complexity.]
-void drawFull(Model *m, mat4 cameraTransform, mat4 modelTransform, mat4 shadowMapTransform, GLuint texture, GLuint shadowMap, struct Light* light, vec3 cameraPosition);
-void drawModelInstanced(Model *m, mat4 camera, mat4 model, struct Light* light);
-void drawSimple(Model *m, mat4 cameraTransform, mat4 modelTransform, GLuint texture);
-void drawPlain(Model* m, mat4 modelViewProjectionTransform, mat4 modelTransform);
+void drawFull(Model *m, mat4 cameraTransform, mat4 modelTransform,
+              mat4 shadowMapTransform, GLuint texture, GLuint shadowMap,
+              struct Light* light, vec3 cameraPosition);
+
+void drawModelInstanced(Model *m, mat4 camera, mat4 model,
+                        struct Light* light);
+
+void drawSimple(Model *m, mat4 cameraTransform, mat4 modelTransform,
+                GLuint texture);
+
+void drawPlain(Model* m, mat4 modelViewProjectionTransform,
+               mat4 modelTransform);
 \end{lstlisting}
 
 The most simple of our shaders called by \emph{drawPlain} takes only the pointer to a model, a transform from the model coordinate system to that of the camera, and finally a matrix for placing and morphing the model within the world.
@@ -124,7 +146,8 @@ void drawPlain(Model *m, mat4 cameraTransform, mat4 modelTransform) {
   mat4 modelViewProjectionTransform = Mult(cameraTransform, modelTransform);
 
   glUseProgram(plainProgram);
-  glUniformMatrix4fv(modelViewProjectionLocation, 1, GL_TRUE, modelViewProjectionTransform.m);
+  glUniformMatrix4fv(modelViewProjectionLocation, 1, GL_TRUE,
+                     modelViewProjectionTransform.m);
 
   // Vertex positions.
   glBindVertexArray(m->vao);
