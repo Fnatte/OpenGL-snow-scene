@@ -103,13 +103,14 @@ Shadow maps are achieved by rendering a depth map from the viewport of the light
 
 \subsection{Falling snow}
 
-Falling snow is often implemented as some sort of particle system. A particle system of snow is not very hard to implement in the case of calm weather. Particle systems that aim to be very realistic must take into account the fluid dynamics that affect the particles. 
+Falling snow is often implemented as some sort of particle system. A particle system of snow is not very hard to implement in the case of calm weather. Particle systems that aim to be very realistic must take into account the fluid dynamics that affect the particles.
 
 \subsubsection{Navier Stokes}
 
 In order to simulate the effect of gusts of wind blowing on the snow Navier-Stokes equations could be used. In \cite{fluid-dynamics} J. Stam describes how the Navier-Stokes equations can be used to implement smokes, clouds and mists in games. Another paper \cite{modeling-falling-accumulating-snow} by Moeslund et. al. also use the Navier-Stokes equations to simulate the wind field that affects the movement of the snow particles.
 
 The movement of a fluid can be described by a velocity field. The Navier-Stokes equations can be applied to calculate the evolution of the velocity field over time. The velocity field can then be used to apply movement to the snow particles. \cite{fluid-dynamics}
+
 
 \subsection{Sub pixel shadow mapping}
 Looks fantastic while being less complex than increasing the resolution of the shadow map equivelently \href{https://www.youtube.com/watch?v=YSQDNy28SDM}{[3]}.
@@ -201,7 +202,7 @@ uniform struct Light {
 } light;
 \end{lstlisting}
 
-Using the data passed in as this structure we apply light if the texel is within the light cone.
+Using the data passed in as this structure we apply light if the fragment is within the light cone.
 
 \begin{lstlisting}[label=lst:applyLight,caption= Shader function for applying lighting]
 vec3 applyLight(Light light, vec3 surfaceColor, vec3 normal,
@@ -239,20 +240,42 @@ vec3 applyLight(Light light, vec3 surfaceColor, vec3 normal,
 
 The last argument passed into the \emph{applyLight} function in Listing~\ref{lst:applyLight} is the output of the \emph{getShadow} function in Listing~\ref{lst:getShadow}.
 
-\begin{lstlisting}[label=lst:getShadow,caption= The shader function figuring out whether the texel is in the shade.]
-float getShadow() {
-  vec4 shadowCoordinateWdivide = lightSourceCoord / lightSourceCoord.w;
-  shadowCoordinateWdivide.z -= 0.002;
-  float distanceFromLight = texture(shadowMap, shadowCoordinateWdivide.st).x;
-  distanceFromLight = (distanceFromLight-0.5) * 2.0;
-  float shadow = 1.0;
-  if (lightSourceCoord.w > 0.0)
-    if (distanceFromLight < shadowCoordinateWdivide.z) // shadow
-      shadow = 0.2;
+\begin{lstlisting}[label=lst:getShadow,caption= The shader function figuring out whether the fragment is in the shade.]
+float getShadow(int index) {
+  // Perform perspective division to get the actual texture position
+  vec4 shadowCoordinateWdivide = lightSourceCoord[index] / lightSourceCoord[index].w;
+
+  /* Used to lower moire' pattern and self-shadowing
+   * The optimal value here will vary with different GPU's
+   * depending on their Z buffer resolution.
+   */
+  shadowCoordinateWdivide.x -= 0.00001;
+  shadowCoordinateWdivide.y -= 0.00001;
+  shadowCoordinateWdivide.z -= 0.00005;
+
+  float shadow = 1.0; // 1.0 = no shadow
+  for (int i = 0; i < 4; i++) {
+    int randomIndex = int(4.0 * random(gl_FragCoord.xyy, i)) \% 4;
+    float distanceFromLight = texture(shadowMap[index], shadowCoordinateWdivide.st
+                              + poissonDisk[randomIndex] / 1000.0).x;
+    distanceFromLight = (distanceFromLight-0.5) * 2.0;
+
+    if (lightSourceCoord[index].w > 0.0)
+      if (distanceFromLight < shadowCoordinateWdivide.z)
+        shadow -= 0.001 / (shadowCoordinateWdivide.z - distanceFromLight);
+  }
+  shadow = clamp(shadow, 0.2, 1.0);
   return shadow;
 }
 \end{lstlisting}
 
+As is visible in Listing~\ref{lst:getShadow} we make four pseudo-randomly scattered samples for each fragment. This results in the dithering which can be seen in Figure~\ref{fig:dithering}. It doesn't look very pretty close up, but at a distance it smooths out an otherwise straight edge.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.9\textwidth]{dithering}
+  \caption{\label{fig:dithering} The effect of the pseudo random shadow map samples.}
+\end{figure}
 
 \subsection{FBO debugging}
 
@@ -291,9 +314,10 @@ The model for the snow particles is a double cone as shown in Figure~\ref{fig:dc
 \end{figure}
 
 
-\section{Problems}
 
-A lot, like you have no idea how many problems we had.
+\section{Issues}
+
+Not only did we have issues on our own, the project had a lot of issues too.
 
 \subsection{Detangling global state}
 
@@ -301,24 +325,28 @@ We have probably refactored the codebase completely somewhere around three times
 
 \subsection{Shadow buffer bugs}
 
-We ended up wasting about a week doing nothing but trying to debug a fully working implementation of shadow maps, only that it did not render correctly on the specific hardware we were developing it on. The bug resulted in flimmering shadows. 
+We ended up wasting about a week doing nothing but trying to debug a fully working implementation of shadow maps, only that it did not render correctly on the specific hardware we were developing it on. The bug resulted in flimmering shadows.
 
 We failed to track down what actually caused the bug, although we know the fault happend when rendering the shadow map to the FBO. It would have been nice if we could find the cause, so that we could fully understand the underlying problem. We did learn a lot while trying to figure this one out, but in the end the most important lesson was to try on different hardware.
 
 TODO: Add screenshot of the bug. (worked on NVIDIA NVS 4200M which is similar to a GT520M)
 
+The lesson learnt is to try the code on more than one machine.
+
 
 
 \section{Conclusions}
 
-``The wrong man in the right place, can make all the difference in the world'' as we know from the writings of our Lord and Saviour Gabe Newell in the annals of Half Life 2. In our project we absolutely encountered a lot of very basic issues such as placing items in the world, simply because we had to write a lot from scratch. More than anything else we have realised the wisdom in the quote ``Write a game, not a game engine''. If we were to actually make a computer game at any point in our lives we will, with the experience of this course in our backpack, seriously consider utilizing existing libraries or existing game engines. Because if you do not you end up, like us, never getting to work on the stuff you are actually interesting in; only working on the tedious neccecities which facilitate what you want to do.
+``The wrong man in the right place, can make all the difference in the world'' as we know from the writings of our Lord and Saviour Gabe Newell in the annals of Half Life 2. In our project we absolutely encountered a lot of very basic issues such as placing items in the world, simply because we had to write that logic from scratch. More than anything else we have realised the wisdom in the quote ``Write a game, not a game engine''. If we were to actually make a computer game at any point in our lives we will, with the experience of this course in our backpack, seriously consider utilizing existing libraries or existing game engines. Because if you do not you end up, like us, never getting to work on the stuff you are actually interesting in; only working on the tedious neccecities which facilitate what you want to do.
 
-What we got was this:
+In the end we didn't have enough time to implement Navier Stokes equations or anything more fancy than pseudo random rotations applied to our snow flakes which is somewhat disappointing. We ended up spending a lot of time working on light and shadows when it was the snow dynamics we really wanted to work on.
+
+In Figure~\ref{fig:result} we can see a screen capture of the resulting scene. Things of note are the thousands of tiny snow flakes casting shadows on the ground. The light cones of the street lights do intersect and add up to each other on the same ground object.
 
 \begin{figure}[ht]
   \centering
   \includegraphics[width=0.9\textwidth]{result}
-  \caption{\label{fig:label} Our OpenGL snow scene.}
+  \caption{\label{fig:result} Our OpenGL snow scene.}
 \end{figure}
 
 You can also see a short video on \href{YouTube}{TODO!}
@@ -352,7 +380,6 @@ You can also see a short video on \href{YouTube}{TODO!}
     T.B. Moeslund, C.B. Madsen, M. Aagaard, and D. Lerche
     \emph{Modeling Falling and Accumulating Snow}
     Vision, Video and Graphics (2005)
-
 
 \end{thebibliography}
 
