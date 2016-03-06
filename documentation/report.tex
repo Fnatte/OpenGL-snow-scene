@@ -98,8 +98,7 @@ We decided against using shadow volumes as we had absolutely no need for pixel p
 
 \subsubsection{Shadow Maps}
 
-Shadow maps are achieved by rendering a depth map from the viewport of the light source and then using it in the shading of the real render from the camera viewport.
-
+Shadow maps are achieved by rendering a depth map from the viewport of the light source and then using it in the shading of the real render from the camera viewport. The idea was introduced by L. Williams in \cite{shadow-maps} in 1978. The technique has been heavily used since and has many adaptions. The shadow map algorithm by L. Williams suggests dithering and Z-bias substraction to improve the edges of the shadows and reduce self-shadowing.
 
 \subsection{Falling snow}
 
@@ -110,12 +109,6 @@ Falling snow is often implemented as some sort of particle system. A particle sy
 In order to simulate the effect of gusts of wind blowing on the snow Navier-Stokes equations could be used. In \cite{fluid-dynamics} J. Stam describes how the Navier-Stokes equations can be used to implement smokes, clouds and mists in games. Another paper \cite{modeling-falling-accumulating-snow} by Moeslund et. al. also use the Navier-Stokes equations to simulate the wind field that affects the movement of the snow particles.
 
 The movement of a fluid can be described by a velocity field. The Navier-Stokes equations can be applied to calculate the evolution of the velocity field over time. The velocity field can then be used to apply movement to the snow particles. \cite{fluid-dynamics}
-
-
-\subsection{Sub pixel shadow mapping}
-Looks fantastic while being less complex than increasing the resolution of the shadow map equivelently \href{https://www.youtube.com/watch?v=YSQDNy28SDM}{[3]}.
-
-
 
 \section{Implementation}
 
@@ -380,6 +373,11 @@ You can also see a short video on \href{YouTube}{TODO!}
     T.B. Moeslund, C.B. Madsen, M. Aagaard, and D. Lerche
     \emph{Modeling Falling and Accumulating Snow}
     Vision, Video and Graphics (2005)
+
+  \bibitem{shadow-maps}
+    Lance Williams
+    \emph{Casting Curved Shadows on Curved Surfaces}
+    SIGGRAPH 1978, pages 270–274
 
 \end{thebibliography}
 
