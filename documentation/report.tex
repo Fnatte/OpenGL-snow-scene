@@ -20,6 +20,8 @@ basicstyle=\scriptsize
 
 \newpage
 
+
+
 \section{Introduction}
 
 We set out with one simple task: We wanted to make it snow with real time graphics. We wanted to create a real time world looking like Figure~\ref{fig:youtube}:
@@ -31,6 +33,8 @@ We set out with one simple task: We wanted to make it snow with real time graphi
 \end{figure}
 \noindent
 And off we went!
+
+
 
 \section{Background}
 
@@ -49,9 +53,20 @@ In Figure~\ref{fig:youtube} and associated video we can identify a couple of ele
 All these has some crux, even the most simplest tasks like placing millions of little snow flakes on the screen. Lets look at them in order.
 
 
+\subsection{Models for trees and light posts}
+
+This first point seems dead simple but can be made quite tedious when one takes into account that models should have textures and preferrably also bump maps baked into them. Seeing as we're not 3D artists by any stretch of the imagination a lot of time can be consumed by such seemingly simple tasks.
+
+
 \subsection{Multiple directed light cones}
 
-We looked into a couple of different techniques when it came to making the light:
+Overlapping of these light cones means either two things:
+
+\begin{itemize}
+\item Forward rendering:
+
+  Each object has to be drawn
+\end{itemize}
 
 
 \subsection{Snow on the ground}
@@ -70,16 +85,18 @@ We decided against using shadow volumes as we had absolutely no need for pixel p
 
 \subsubsection{Shadow Maps}
 
-Shadow maps are achieved by rendering a depth map from the viewport of the light source and then using it in the the shading of the real render from the camera viewport.
+Shadow maps are achieved by rendering a depth map from the viewport of the light source and then using it in the shading of the real render from the camera viewport.
 
 
 \subsection{Falling snow}
 
-Falling snow is often implemented as some sort of particle system.
+Falling snow is often implemented as some sort of particle system. A particle system of snow is not very hard to implement in the case of calm weather. Particle systems that aim to be very realistic must take into account the fluid dynamics that affect the particles. 
 
 \subsubsection{Navier Stokes}
 
-In order to simulate the effect of gusts of wind blowing on the snow navier stokes equations could be used \cite{fluid-dynamics}. The linked paper is about fluid dynamics but since they are pretty much the same we are sure the methods described could still be applied.
+In order to simulate the effect of gusts of wind blowing on the snow Navier-Stokes equations could be used. In \cite{fluid-dynamics} J. Stam describes how the Navier-Stokes equations can be used to implement smokes, clouds and mists in games. Another paper \cite{modeling-falling-accumulating-snow} by Moeslund et. al. also use the Navier-Stokes equations to simulate the wind field that affects the movement of the snow particles.
+
+The movement of a fluid can be described by a velocity field. The Navier-Stokes equations can be applied to calculate the evolution of the velocity field over time. The velocity field can then be used to apply movement to the snow particles. \cite{fluid-dynamics}
 
 \subsection{Sub pixel shadow mapping}
 Looks fantastic while being less complex than increasing the resolution of the shadow map equivelently \href{https://www.youtube.com/watch?v=YSQDNy28SDM}{[3]}.
@@ -145,7 +162,7 @@ struct Light {
 
 This made it possible for us to position and rotate the light sources using the normal FPS camera controls we had developed for the camera - merely storing the data kept in a camera and then using it for a light source.
 
-Other than that there is nothing surprising in our implementation of shadow maps. We draw the the depth map with the simplest shader possible after which we use the resulting FBO.
+Other than that there is nothing surprising in our implementation of shadow maps. We draw the depth map with the simplest shader possible after which we use the resulting FBO.
 
 Our implementation of shadow maps stems from the course content and an OpenGL article ~\cite{shadow-maps-tutorial} found online.
 
@@ -257,7 +274,7 @@ A lot, like you have no idea how many problems we had.
 
 \subsection{Detangling global state}
 
-We have probably refactored the codebase completelely somewhere around three times, trying to untangle it from iself. The code we started out with, mostly based on old lab.
+We have probably refactored the codebase completely somewhere around three times, trying to untangle it from iself. The code we started out with, mostly based on old lab, had a lot of global state on the heap which was modified in a lot of different places. In a lot of cases we could justify keeping for example vectors or 4 by 4 matrixes on the stack, the functional purity was more important than the minute performance gains.
 
 \subsection{Shadow buffer bugs}
 
@@ -287,7 +304,7 @@ You can also see a short video on \href{YouTube}{TODO!}
     \emph{Tutorial 16 : Shadow mapping}.
     2016.
     Available: \url{http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-16-shadow-mapping/.}
-    Accessed: 2016-01-20 
+    Accessed: 2016-01-20
 
   \bibitem{disney-snow}
     Stomakhin, Alexey, Craig Schroeder, Lawrence Chai, Joseph Teran, and Andrew Selle.
@@ -303,6 +320,12 @@ You can also see a short video on \href{YouTube}{TODO!}
     Wang, N., \& Wade, B. (2004).
     \emph{Rendering Falling Rain and Snow.}
     ACM SIGGRAPH 2004 Sketches, (sketches 0186), 14. doi:10.1145/1186223.1186241
+
+  \bibitem{modeling-falling-accumulating-snow}
+    T.B. Moeslund, C.B. Madsen, M. Aagaard, and D. Lerche
+    \emph{Modeling Falling and Accumulating Snow}
+    Vision, Video and Graphics (2005)
+
 
 \end{thebibliography}
 
