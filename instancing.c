@@ -85,6 +85,7 @@ static void createInstanceTransforms(mat4 *transforms, float time) {
 						(x - count/2) * volumeSize.x / particleSize + (0.5f - rand.x) * volumeSize.x * 6.0f,
 					-fmodf((y - count/2) * volumeSize.y / particleSize + (0.5f - rand.y) * volumeSize.y * 6.0f + fallOffset, 200.0f),
 						-fmodf((z - count/2) * volumeSize.z / particleSize + (0.5f - rand.z) * volumeSize.z * 6.0f + fallOffset * 0.5, volumeSize.z * 25.0));
+				// mat4 rotation = Mult(Rx(time * 2.5 * rand.y), Rz(time * 2.0 * rand.x));
 				mat4 rotation = Rx(.5f);
 				mat4 scale = S(particleSize, particleSize, particleSize);
 
