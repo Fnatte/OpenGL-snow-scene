@@ -330,14 +330,14 @@ We have probably refactored the codebase completely somewhere around three times
 
 \subsection{Shadow buffer bugs}
 
-We ended up wasting about a week doing nothing but trying to debug a fully working implementation of shadow maps, only that it did not render correctly on the specific hardware we were developing it on. The bug resulted in flimmering shadows.
+We ended up wasting about a week doing nothing but trying to debug a fully working implementation of shadow maps, only that it did not render correctly on the specific hardware we were developing it on. The bug caused flimmering in the shadows.
 
-We failed to track down what actually caused the bug, although we know the fault happend when rendering the shadow map to the FBO. It would have been nice if we could find the cause, so that we could fully understand the underlying problem. We did learn a lot while trying to figure this one out, but in the end the most important lesson was to try on different hardware.
-
-TODO: Add screenshot of the bug. (worked on NVIDIA NVS 4200M which is similar to a GT520M)
-
-The lesson learnt is to try the code on more than one machine.
-
+We failed to track down what actually caused the bug, although we know the fault happend when rendering the shadow map to the FBO. It would have been nice if we could find the cause, so that we could fully understand the underlying problem. The bug was produced on a laptop with a \emph{Mobility Radeon HD 3650} which is a rather old graphics card. The code worked as expected without the bug on \emph{NVIDIA NVS 4200M} and later NVIDIA models. The lesson learnt is to try the code on more than one machine.
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\textwidth]{shadow_map_bug}
+  \caption{\label{fig:shadow-map-bug-image} The shadow map bug, rendered on a Mobility Radeon HD 3650.}
+\end{figure}
 
 
 \section{Conclusions}
