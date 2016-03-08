@@ -33,13 +33,7 @@ We set out with one simple task: We wanted to make it snow with real time graphi
 \end{figure}
 
 \noindent
-Without further ado we started enumerating the things needed in order to produce a digital world like the one in the video.
-
-
-
-\section{Background}
-
-In Figure~\ref{fig:youtube} and associated video we can identify a couple of elements being present:
+Without further ado we started enumerating the things needed in order to produce a digital world like the one in the video. 
 
 \begin{enumerate}
   \item Models for trees and light posts.
@@ -51,13 +45,16 @@ In Figure~\ref{fig:youtube} and associated video we can identify a couple of ele
   \item The camera shaking.
 \end{enumerate}
 
-All these has some crux, even the most simplest tasks like placing millions of little snow flakes on the screen. Lets look at them in order.
+These were the initial goals for the project. In the end we never implemented snow on the ground nor snow on the camera lens. All of these tasks has some crux, even the most simplest tasks like placing millions of little snow flakes on the screen.
 
+\section{Background and Theory}
+
+In this chapter we address each of the goals listed in the introduction. Not all theory below is used in the implementation, but were looked upon or initially planned to be used.
 
 \subsection{Models for trees and light posts}
 
 This first point seems dead simple but can be made quite tedious when one takes into account that models should have textures and preferrably also bump maps baked into them. Seeing as we're not 3D artists by any stretch of the imagination a lot of time can be consumed by such seemingly simple tasks.
-
+ 
 
 \subsection{Multiple directed light cones}
 
