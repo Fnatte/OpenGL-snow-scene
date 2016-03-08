@@ -70,6 +70,7 @@ There are two major ways in which you can structure the light calculations in a 
   Lighting calculations are deferred, as the name implies, until the scene geometry is rendered. This means that depth tests can be used to remove the light calculations of occluded objects.
 \end{itemize}
 
+\noindent
 The latter is of course more performant in larger scenes with many light sources. On the other hand its implementation isn't necessarily straight forward, neither is it needed for simple scenes.
 
 
@@ -91,7 +92,7 @@ But if the system on the other hand aims to emulate advanced weather with dynami
 
 In order to simulate the effect of gusts of wind blowing on the snow Navier-Stokes equations could be used. In \cite{fluid-dynamics} J. Stam describes how the Navier-Stokes equations can be used to implement smokes, clouds and mists in games. Another paper \cite{modeling-falling-accumulating-snow} by Moeslund et. al. also use the Navier-Stokes equations to simulate the wind field that affects the movement of the snow particles.
 
-The movement of a fluid can be described by a velocity field. The Navier-Stokes equations can be applied to calculate the evolution of the velocity field over time. The velocity field can then be used to apply movement to the snow particles. \cite{fluid-dynamics}
+The movement of a gas can be described by a velocity field. The Navier-Stokes equations can be applied to calculate the evolution of the velocity field over time. The velocity field can then be used to apply movement to the snow particles. \cite{fluid-dynamics}
 
 
 
@@ -99,7 +100,9 @@ The movement of a fluid can be described by a velocity field. The Navier-Stokes 
 
 As we can see in Figure~\ref{fig:youtube} the snow casts almost no shadows themselves, this could either be due to the quality of the image or because snow flakes are quite translucent and reemit most of the light touching them. On the other hand the lamp post and the tree creates distinct shadows on the ground.
 
-The most interesting problem here is then to make a distinction between the very smooth shadows that we know, from real life experiences, snow casts on the ground and the very dark shadows of the solid objects. A somewhat ugly solution would be to simply not have the snow flakes cast any shadows.
+The most interesting problem here is then to make a distinction between the very smooth shadows that we know, from real life experiences, snow casts on the ground and the very dark shadows of solid objects such as a lamp post.
+
+A somewhat ugly solution would be to simply not have the snow flakes cast any shadows. Another solution would be to draw the shadows into a texture, but draw the snow flakes first and apply a low-pass filter on the texture before drawing the semi-sharp solid object shadows.
 
 
 \subsubsection{Shadow volumes}
