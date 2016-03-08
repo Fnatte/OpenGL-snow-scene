@@ -61,7 +61,7 @@ This first point seems dead simple but can be made quite tedious when one takes 
 
 \subsection{Multiple directed light cones}
 
-Overlapping of these light cones means either two things:
+There are two major ways in which you can structure the light calculations in a scene:
 
 \begin{itemize}
 \item Forward rendering:
@@ -73,21 +73,24 @@ Overlapping of these light cones means either two things:
   Lighting calculations are deferred, as the name implies, until the scene geometry is rendered. This means that depth tests can be used to remove the light calculations of occluded objects.
 \end{itemize}
 
-The latter is of course more performant in larger scenes with many light sources. On the other hand its implementation isn't necessarily straight forward.
+The latter is of course more performant in larger scenes with many light sources. On the other hand its implementation isn't necessarily straight forward, neither is it needed for simple scenes.
 
 
 \subsection{Snow on the ground}
 
 There were some pretty sophisticated models used in the Disney film Frozen \cite{disney-snow}, but we deemed them unfit for real time usage.
 
-The reference video has in itself no moving snow on the ground, but its reasonable to assume that it looks odd if the snow simply falls through the ground.
+The reference video has in itself no moving snow on the ground, but its reasonable to assume that it looks odd if the snow simply falls through the ground. One idea would be to have the snow particles ``land'' on the ground only to slowly sink through it and eventually respawn at the top of the particle system.
 
 
 \subsection{Falling snow}
 
-Falling snow is often implemented as some sort of particle system. A particle system of snow is not very hard to implement in the case of calm weather. Particle systems that aim to be very realistic must take into account the fluid dynamics that affect the particles.
+Falling snow is often implemented as some sort of particle system. A particle system of snow is not very hard to implement in the case of calm weather where the snow falls mostly in semi-straight lines.
 
-\subsubsection{Navier Stokes}
+But if the system on the other hand aims to emulate advanced weather with dynamic gusts of wind, perhaps initiated by a user of the system, it needs to to use something along the lines of Navier-Stokes equations.
+
+
+\subsubsection{Navier-Stokes}
 
 In order to simulate the effect of gusts of wind blowing on the snow Navier-Stokes equations could be used. In \cite{fluid-dynamics} J. Stam describes how the Navier-Stokes equations can be used to implement smokes, clouds and mists in games. Another paper \cite{modeling-falling-accumulating-snow} by Moeslund et. al. also use the Navier-Stokes equations to simulate the wind field that affects the movement of the snow particles.
 
